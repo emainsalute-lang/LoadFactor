@@ -169,6 +169,11 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .auth-switch { display:grid; grid-template-columns:1fr 1fr; gap:5px; background:#111419; border:1px solid var(--border); border-radius:6px; padding:4px; margin:20px 0; }
 .auth-switch button { border:0; border-radius:4px; background:transparent; color:#a0a9b8; padding:9px; font-size:11px; }
 .auth-switch button[aria-pressed="true"] { background:#2b3038; color:#fff; }
+.google-auth-button { width:100%; min-height:42px; display:flex; align-items:center; justify-content:center; gap:10px; border:1px solid #454b57; border-radius:6px; background:#20242b; color:#edf0f5; font-size:11px; font-weight:600; }
+.google-auth-button:hover:not(:disabled) { background:#292e37; border-color:#687180; }
+.google-auth-button:disabled { cursor:wait; opacity:.6; }
+.auth-divider { display:flex; align-items:center; gap:12px; color:#818996; font-size:9px; margin:16px 0; }
+.auth-divider::before, .auth-divider::after { content:""; flex:1; border-top:1px solid var(--border); }
 .auth-card form { display:grid; gap:14px; }
 .auth-card input { display:block; width:100%; margin-top:7px; }
 .auth-submit { width:100%; margin-top:4px; }
