@@ -1,0 +1,14 @@
+{
+  "id": "/",
+  "name": "LoadFactor — Athletic Performance",
+  "short_name": "LoadFactor",
+  "description": "Log your training, measure progress, and build your next level.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#101216",
+  "theme_color": "#101216",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

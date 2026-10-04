@@ -1,0 +1,13 @@
+import { readFileSync, writeFileSync } from "node:fs";
+function replace(path, before, after) {
+  const value = readFileSync(path, "utf8"); if (!value.includes(before)) throw new Error("Missing edit anchor: " + path);
+  writeFileSync(path, value.replace(before, after));
+}
+replace("src/components/coaching-panel.tsx", 'setAcceptCode(""); setAcceptPermissions', 'setAcceptCode(""); setInvitationPreview(null); setAcceptPermissions');
+replace("src/components/coaching-panel.tsx", 'onChange={e => setAcceptCode(e.target.value)} autoComplete="off"', 'onChange={e => { setAcceptCode(e.target.value); setInvitationPreview(null); }} autoComplete="off"');
+replace("src/components/coaching-panel.tsx", '</label>{permissionFields(acceptPermissions, setAcceptPermissions)}<button className="primary-button">Accept invitation', '</label><button type="button" className="secondary-button" disabled={acceptCode.trim().length !== 64} onClick={() => void action(async () => { setInvitationPreview(await coachingRequest(account.id, "preview-invitation", "POST", { code: acceptCode.trim() })); return "Review the coach, team and permissions before accepting."; })}>Preview coach and team</button>{invitationPreview && <p>Coach: {invitationPreview.coachName} / Team: {invitationPreview.teamName} / expires {invitationPreview.expiresAt.slice(0, 10)}</p>}{permissionFields(acceptPermissions, setAcceptPermissions)}<button className="primary-button" disabled={!invitationPreview}>Accept invitation');
+replace("src/components/coaching-panel.tsx", '<th>Bodyweight ({weightUnit})</th><th>Notes</th>', '<th>Bodyweight ({weightUnit})</th><th>Regional soreness</th><th>Notes</th>');
+replace("src/components/coaching-panel.tsx", '<td>{w.notes}</td>', '<td>{Object.entries(w.muscleSoreness).map(([group, rating]) => group + ": " + rating).join(", ") || "-"}</td><td>{w.notes}</td>');
+replace("src/components/coaching-panel.tsx", 'view.planning.plans.map(p => <p key={p.id}>{p.date} / {p.input.title} / {p.input.exercises.length} target sets{p.deload ? " / Deload" : ""}</p>)', 'view.planning.plans.map(p => <details key={p.id}><summary>{p.date} / {p.input.title} / {p.input.exercises.length} target sets{p.deload ? " / Deload" : ""}</summary><p>{p.input.exercises.map(s => s.exerciseId + ": " + s.reps + " x " + weightFromKg(s.weightKg, weightUnit).toFixed(1) + " " + weightUnit + " @ RPE " + s.rpe).join("; ")}</p></details>)');
+replace("src/components/coaching-panel.tsx", '</details>}{view.sessions &&', '<h4>Goals</h4>{view.planning.goals.map(g => <p key={g.id}>{g.name} / {g.metric} / target {g.target} / {g.start} to {g.end}</p>)}</details>}{view.sessions &&');
+replace("src/components/account-panel.tsx", 'Athlete name<input required', 'Name<input required');

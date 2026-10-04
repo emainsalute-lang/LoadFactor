@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101216">
+<title>Offline workout log · LoadFactor</title>
+<style>
+body{margin:0;padding:2rem;background:#101216;color:#edf0f5;font:16px system-ui,sans-serif}main{max-width:36rem;margin:auto}label{display:block;margin:1rem 0}input,select,button{box-sizing:border-box;width:100%;padding:.8rem;border:1px solid #454b55;border-radius:.4rem;background:#191c22;color:inherit}button{background:#c6f467;color:#171d0b;font-weight:700}p{color:#aeb5c0}
+</style>
+<main>
+<h1>Offline session logger</h1>
+<p>Quick-log a strength, jump, or sprint session while offline. It will sync when you return to LoadFactor and sign in to the same account.</p>
+<form id="log">
+<label>Workout name<input name="title" maxlength="80" required value="Offline training"></label>
+<label>Date<input name="date" type="date" required></label>
+<label>Exercise<select name="exerciseId"><option value="trap-bar-deadlift" data-kind="strength">Trap bar deadlift</option><option value="back-squat" data-kind="strength">Back squat</option><option value="bench-press" data-kind="strength">Bench press</option><option value="overhead-press" data-kind="strength">Overhead press</option><option value="barbell-row" data-kind="strength">Barbell row</option><option value="romanian-deadlift" data-kind="strength">Romanian deadlift</option><option value="hang-clean" data-kind="strength">Hang clean</option><option value="depth-jump" data-kind="jump" data-category="depth">Depth jump</option><option value="countermovement-jump" data-kind="jump" data-category="countermovement">Countermovement jump</option><option value="squat-jump" data-kind="jump" data-category="squat">Squat jump</option><option value="vertical-jump" data-kind="jump" data-category="vertical">Vertical jump</option><option value="broad-jump" data-kind="jump" data-category="broad">Broad jump</option><option value="10m-fly" data-kind="sprint">10m fly sprint</option><option value="shuttle-run" data-kind="sprint">Shuttle run</option><option value="sprint-test" data-kind="sprint" data-configurable="true">Configurable sprint</option></select></label>
+<label>Load (kg)<input name="weightKg" type="number" min="0" max="1500" step="any" required value="0"></label>
+<label>Reps<input name="reps" type="number" min="1" max="1000" required value="5"></label>
+<label>Set RPE<input name="rpe" type="number" min="1" max="10" required value="7"></label>
+<label id="jump-field" hidden>Jump height (cm)<input name="jumpHeightCm" type="number" min="0.01" max="400" step="any"></label>
+<label id="broad-field" hidden>Broad jump distance (cm)<input name="broadJumpCm" type="number" min="0.01" max="1500" step="any"></label>
+<label id="distance-field" hidden>Sprint distance (m)<input name="distanceM" type="number" min="0.01" max="10000" step="any"></label>
+<label id="time-field" hidden>Sprint time (seconds)<input name="splitTimeSeconds" type="number" min="0.001" max="3600" step="any"></label>
+<button>Save offline session</button>
+</form><p id="status" role="status"></p><p><a href="/" style="color:#c6f467">Return to the app</a></p>
+</main>
+<script>
+const localDate=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+document.querySelector('input[name=date]').value=localDate();
+try { const maxDate=localStorage.getItem('loadfactor-offline-max-date'); if(maxDate)document.querySelector('input[name=date]').max=maxDate; } catch { document.querySelector('#status').textContent='Could not read the account date limit. Confirm the date is not in the future before saving.'; }
+const exercise=document.querySelector('select[name=exerciseId]'), fields={jump:document.querySelector('#jump-field'),broad:document.querySelector('#broad-field'),distance:document.querySelector('#distance-field'),time:document.querySelector('#time-field')};
+function updateFields(){const option=exercise.selectedOptions[0],kind=option.dataset.kind,broad=kind==='jump'&&option.dataset.category==='broad',configurable=option.dataset.configurable==='true';fields.jump.hidden=kind!=='jump'||broad;fields.jump.querySelector('input').required=kind==='jump'&&!broad;fields.broad.hidden=!broad;fields.broad.querySelector('input').required=broad;fields.distance.hidden=kind!=='sprint'||!configurable;fields.distance.querySelector('input').required=kind==='sprint'&&configurable;fields.time.hidden=kind!=='sprint';fields.time.querySelector('input').required=kind==='sprint'}
+exercise.addEventListener('change',updateFields);updateFields();
+document.querySelector('#log').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const form=e.currentTarget;
+  const status=document.querySelector('#status');
+  try {
+    const f=new FormData(form),option=exercise.selectedOptions[0],kind=option.dataset.kind,broad=kind==='jump'&&option.dataset.category==='broad',distance=kind==='sprint'?(option.dataset.configurable==='true'?Number(f.get('distanceM')):option.value==='10m-fly'?10:20):null,clientId=crypto.randomUUID(),session={title:f.get('title'),date:f.get('date'),notes:'',tags:[],customExercises:[],bodyweightKg:null,durationMinutes:null,sessionRpe:null,plannedWorkoutId:null,exercises:[{exerciseId:option.value,weightKg:kind==='strength'?Number(f.get('weightKg')):0,reps:Number(f.get('reps')),jumpHeightCm:kind==='jump'&&!broad?Number(f.get('jumpHeightCm')):null,splitTimeSeconds:kind==='sprint'?Number(f.get('splitTimeSeconds')):null,rpe:Number(f.get('rpe')),setType:'working',superset:null,dropGroup:null,tempo:null,pauseSeconds:null,test:kind==='jump'?{jumpCategory:option.dataset.category,approach:'standing',leg:'both',broadJumpCm:broad?Number(f.get('broadJumpCm')):null,distanceM:null,splits:[],protocol:'Offline log'}:option.value==='sprint-test'?{jumpCategory:'vertical',approach:'standing',leg:'both',broadJumpCm:null,distanceM:distance,splits:[],protocol:'Offline log'}:null}]};
+    const db=await new Promise((resolve,reject)=>{const request=indexedDB.open('loadfactor-offline',1);request.onupgradeneeded=()=>{if(!request.result.objectStoreNames.contains('sessions'))request.result.createObjectStore('sessions',{keyPath:'clientId'})};request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error)});
+    await new Promise((resolve,reject)=>{const transaction=db.transaction('sessions','readwrite');transaction.objectStore('sessions').put({clientId,session,state:'pending',accountId:localStorage.getItem('loadfactor-offline-account-id')||''});transaction.oncomplete=resolve;transaction.onerror=()=>reject(transaction.error)});
+    status.textContent='Saved on this device. Open the app online and sign in to sync it.';
+    form.reset();document.querySelector('input[name=date]').value=localDate();updateFields();
+  } catch(error) { status.textContent=error instanceof Error?'Could not save offline session: '+error.message:'Could not save offline session. Keep this page open and try again.'; }
+});
+</script>
+</html>
