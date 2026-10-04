@@ -87,12 +87,17 @@ export default function FirebaseLanding() {
       const code = typeof reason === "object" && reason && "code" in reason ? String(reason.code) : "";
       const messages: Record<string, string> = {
         "auth/popup-closed-by-user": "Google sign-in was cancelled.",
+        "auth/unauthorized-domain": "Google sign-in is not configured for this website. The app owner must add this website's hostname to Firebase Authentication's authorized domains.",
+        "auth/configuration-not-found": "Firebase Authentication is not configured for this app. The app owner must set up Authentication and enable Google sign-in.",
+        "auth/invalid-api-key": "The app's Firebase configuration is invalid. Contact the app owner.",
+        "auth/cancelled-popup-request": "Another sign-in window was opened. Complete sign-in in the latest window.",
+        "auth/too-many-requests": "Too many sign-in attempts. Wait a while and try again.",
         "auth/popup-blocked": "Allow pop-ups for this site, then try Google sign-in again.",
         "auth/operation-not-allowed": "Enable Google sign-in in the Firebase Console to use this option.",
         "auth/network-request-failed": "Could not connect to Firebase. Check your connection and try again.",
         "auth/account-exists-with-different-credential": "An account already exists with this email. Sign in using its original method.",
       };
-      setError(messages[code] ?? "Could not sign in with Google. Please try again.");
+      setError(messages[code] ?? (code.startsWith("auth/") ? `Could not sign in with Google (${code}). Please share this error code with the app owner.` : "Could not sign in with Google. Please try again."));
     } finally {
       setBusy(false);
     }

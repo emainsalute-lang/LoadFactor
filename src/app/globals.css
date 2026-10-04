@@ -19,6 +19,11 @@ a { text-decoration: none; color: inherit; }
 .brand-mark { flex-shrink: 0; overflow: hidden; }
 .brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .brand-period { color: var(--lime); }
+.install-app { position: fixed; right: 20px; bottom: 20px; z-index: 100; max-width: min(420px, calc(100vw - 40px)); }
+.install-app > button { box-shadow: 0 4px 20px #0008; }
+.install-instructions { margin-top: 10px; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: #191c22; box-shadow: 0 8px 30px #0008; max-height: 70vh; overflow-y: auto; font-size: 14px; line-height: 1.6; }
+.install-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.install-instructions p { margin-top: 12px; }
 .workspace-label { font-size: 9px; letter-spacing: 1.6px; color: #717986; display: flex; gap: 7px; align-items: center; margin: 46px 13px 18px; }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); display: inline-block; flex-shrink: 0; box-shadow: 0 0 9px #c6f42520; }
 nav { display: flex; flex-direction: column; gap: 7px; }

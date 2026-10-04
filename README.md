@@ -4,6 +4,8 @@ A responsive athletic performance dashboard built with Next.js App Router, TypeS
 
 ## Run locally
 
+LoadFactor can be installed as a web app on phones and computers. The **Install LoadFactor** button opens the browser installer when available, or shows instructions for adding the app to the home screen or desktop. The button hides when running in an installed app window. Serve over HTTPS (localhost also works). Installation does not connect Firebase users to cloud workout storage; existing browser-local storage limitations still apply.
+
 Install Node.js 22.13 or newer, then:
 
 ```sh
