@@ -1,6 +1,9 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { signOut } from "firebase/auth";
+import { firebaseAuth } from "@/lib/firebase/client";
+import { useFirebaseUser } from "./firebase-auth";
 import { Activity, ArrowDownRight, ArrowUpRight, ChevronRight, Dumbbell, Flame, Gauge, LayoutDashboard, MoveUpRight, Plus, Settings2, Timer, TrendingUp, Zap } from "lucide-react";
 import PerformanceCharts from "./performance-charts";
 import SessionLogger from "./session-logger";
@@ -59,6 +62,7 @@ function readSavedSessions(): SessionSubmission[] {
   });
 }
 export default function Dashboard({ initialData, today: initialToday, account, initialWorkspace, section = "overview" }: { initialData: Data; today: string; account: AccountUser | null; initialWorkspace: AccountWorkspace | null; section?: SectionId }) {
+  const firebaseUser = useFirebaseUser();
   const [today, setToday] = useState(initialToday);
   const [saved, setSaved] = useState<SessionSubmission[]>(initialWorkspace?.records ?? []);
   const [hidden, setHidden] = useState<string[]>([]);
@@ -252,7 +256,7 @@ export default function Dashboard({ initialData, today: initialToday, account, i
         {sections.map(item => <a key={item.id} href={"/" + item.id} aria-current={active === item.id ? "page" : undefined} className={"nav-item " + (active === item.id ? "active" : "")} onClick={event => { event.preventDefault(); navigate(item.id); }}><item.icon size={18}/><span>{item.label}</span>{active === item.id && <ChevronRight size={14}/>}</a>)}
       </nav>
       <div className="sidebar-note"><span className="tiny-label">THE LONG GAME</span><TrendingUp size={25}/><h3>Small gains.<br/>Big difference.</h3><p>Show up. Track the work.<br/>Trust your progress.</p><span className="note-line"/></div>
-      <div className="profile"><span className="avatar">{account ? account.name.split(" ").map(n => n[0]).slice(0, 2).join("") : "AM"}</span><div><strong>{account?.name ?? demoUser.name}</strong><span>{account?.sport ?? "Field & court athlete"}</span></div><span className="status-dot"/></div>
+      <div className="profile"><span className="avatar">{firebaseUser?.displayName?.split(" ").map(n => n[0]).slice(0, 2).join("") || account?.name.split(" ").map(n => n[0]).slice(0, 2).join("") || "AM"}</span><div><strong>{firebaseUser?.displayName || account?.name || demoUser.name}</strong><span>{firebaseUser?.email ?? account?.sport ?? "Field & court athlete"}</span></div>{firebaseUser ? <button className="text-button" type="button" aria-label="Sign out" onClick={() => void signOut(firebaseAuth)}>Sign out</button> : <span className="status-dot"/>}</div>
     </aside>
     <div className="main-shell">
       <header className="topbar"><div><span className="topbar-label">WORKSPACE</span><ChevronRight size={13}/><span>{currentSection.label}</span></div><span className="live-indicator"><span className="status-dot"/><span>Built for your next level</span></span></header>
@@ -261,7 +265,7 @@ export default function Dashboard({ initialData, today: initialToday, account, i
         {offlineQueue.length > 0 && <section className="panel p-4 mb-4" aria-label="Offline sync queue"><strong>{offlineQueue.filter(item => item.state === "pending").length} session(s) waiting to sync</strong>{offlineQueue.filter(item => item.state === "conflict" && item.serverRecord).map(item => <div className="template-item" key={item.clientId}><span>Conflict: “{item.session.title}” shares an ID with a server workout.</span><button className="text-button" type="button" onClick={() => void resolveOfflineConflict(item, "server")}>Keep server version</button><button className="text-button" type="button" onClick={() => void resolveOfflineConflict(item, "local")}>Replace with offline version</button></div>)}</section>}
         {storageError && <p className="error-message" role="alert">{storageError}</p>}
         {active === "overview" && <>
-        <div className="overview-toolbar"><div className="flex items-center gap-2"><span className="status-dot"/><span>Performance snapshot</span><span className="demo-badge">{account ? "ACCOUNT DATA" : "DEMO DATA"}</span></div><span>{parseDate(today).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}</span></div>
+        <div className="overview-toolbar"><div className="flex items-center gap-2"><span className="status-dot"/><span>Performance snapshot</span><span className="demo-badge">{account ? "ACCOUNT DATA" : firebaseUser ? "BROWSER DATA" : "DEMO DATA"}</span></div><span>{parseDate(today).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}</span></div>
         <div className="metric-grid">
           <Metric title="Vertical jump PR" icon={<MoveUpRight size={19}/>} value={summary.verticalPr === null ? "—" : heightFromCm(summary.verticalPr, heightUnit).toFixed(1)} unit={heightUnit} foot="All-time personal best" color="lime" badge={<><ArrowUpRight size={13}/>Explosive power</>}/>
           <Metric title="10m fly sprint" icon={<Timer size={19}/>} value={summary.sprintPr?.toFixed(2) ?? "—"} unit="sec" foot="Fastest recorded split" color="blue" badge={<><ArrowDownRight size={13}/>Speed benchmark</>}/>
@@ -278,7 +282,7 @@ export default function Dashboard({ initialData, today: initialToday, account, i
         {active === "strength" && <StrengthDashboard sessions={data.sessions} custom={initialWorkspace?.custom ?? []} today={today} weightUnit={weightUnit} accountId={account?.id} settings={strengthSettings} onSettings={setStrengthSettings}/>}
         {active === "coaching" && <CoachingPanel account={account} today={today} weightUnit={weightUnit} heightUnit={heightUnit} planning={planning}/>}
         {active === "settings" && <>
-        <AccountPanel account={account}/>
+        {firebaseUser ? <section className="panel account-panel"><h2>Firebase account</h2><p className="account-description">Signed in as {firebaseUser.email}. Your LoadFactor workouts are currently saved in this browser. Cloud account sync is not connected yet.</p><button className="secondary-button" type="button" onClick={() => void signOut(firebaseAuth)}>Sign out</button></section> : <AccountPanel account={account}/>}
         <section className="panel preferences"><div><h2>Make it your own</h2><p>{account ? "Preview units below. Save permanent preferences in Account & data." : "Your preferred units, across every chart and metric."}</p></div><div className="flex flex-wrap gap-3"><label className="field-label">Weight<select value={weightUnit} onChange={e => setWeightUnit(e.target.value as WeightUnit)}><option value="kg">Kilograms (kg)</option><option value="lbs">Pounds (lbs)</option></select></label><label className="field-label">Jump height<select value={heightUnit} onChange={e => setHeightUnit(e.target.value as HeightUnit)}><option value="in">Inches (in)</option><option value="cm">Centimeters (cm)</option></select></label></div></section>
         </>}
         {active === "logger" && <SessionLogger defaultBodyweightKg={account ? account.bodyweightKg ?? null : demoUser.bodyweightKg ?? null} strengthSettings={strengthSettings} key={account?.id ?? "demo"} accountId={account?.id} initialAssets={initialWorkspace ? { custom: initialWorkspace.custom, templates: initialWorkspace.templates } : undefined} today={today} weightUnit={weightUnit} heightUnit={heightUnit} onSave={onSave} sessions={data.sessions} request={request} onRequestHandled={() => setRequest(null)}/>}

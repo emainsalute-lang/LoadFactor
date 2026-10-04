@@ -103,6 +103,8 @@ On serverless hosts, anonymous demo pages and account-status checks do not initi
 
 The Firebase web SDK is initialized in `src/lib/firebase/client.ts` for project `loadfactor-c2e73`. Firebase Analytics is initialized only in supported browsers. The Firebase web configuration, including its API key, is public client configuration and must be protected with Firebase Authentication settings, Firestore Security Rules, and API restrictions where applicable; it is not a server credential. Firebase Authentication and Firestore are not yet used by the account API: account authentication and records still use the SQLite server described above. Before switching those services or deploying to App Hosting, enable Email/Password sign-in and create Firestore in the Firebase Console, then complete the server-side authentication and data migration work.
 
+The public root page presents the app and Firebase email/password sign-in and registration. Enable **Authentication → Sign-in method → Email/Password** in the Firebase Console. Authenticated Firebase users are redirected to the dashboard pages; signing out returns them to the public page. Workout changes remain browser-local for these Firebase users until the Firestore migration is implemented. Do not treat Firebase sign-in as server authorization for account APIs: those still use the separate SQLite account system.
+
 ## Phase 3 training history
 
 - Switch history between list and a Monday-first calendar. Move between months or select a month directly; choose a calendar day to show its matching sessions. Search and filters apply together to both views, and date-range endpoints are inclusive.
