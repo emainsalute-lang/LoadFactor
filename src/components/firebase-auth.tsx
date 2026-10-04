@@ -2,6 +2,7 @@
 
 import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, updateProfile, type User } from "firebase/auth";
 import Link from "next/link";
+import BrandMark from "@/components/brand-mark";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { firebaseAuth } from "@/lib/firebase/client";
@@ -100,7 +101,7 @@ export default function FirebaseLanding() {
   if (user) return <main className="auth-loading" role="status">Opening your dashboard…</main>;
   return <main className="landing-shell">
     <header className="landing-header">
-      <Link href="/" className="landing-brand"><span className="brand-mark">L</span>loadfactor<span className="brand-period">.</span></Link>
+      <Link href="/" className="landing-brand"><BrandMark/>loadfactor<span className="brand-period">.</span></Link>
       <span className="landing-kicker">ATHLETIC PERFORMANCE</span>
     </header>
     <section className="landing-hero">

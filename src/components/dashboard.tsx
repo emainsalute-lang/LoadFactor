@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import BrandMark from "./brand-mark";
 import { signOut } from "firebase/auth";
 import { firebaseAuth } from "@/lib/firebase/client";
 import { useFirebaseUser } from "./firebase-auth";
@@ -250,7 +251,7 @@ export default function Dashboard({ initialData, today: initialToday, account, i
   const currentSection = sections.find(item => item.id === active) ?? sections[0];
   return <div className="app-shell">
     <aside className="sidebar">
-      <Link href="/overview" className="brand" onClick={event => { event.preventDefault(); navigate("overview"); }}><span className="brand-mark"><Zap size={21} fill="currentColor"/></span>loadfactor<span className="brand-period">.</span></Link>
+      <Link href="/overview" className="brand" onClick={event => { event.preventDefault(); navigate("overview"); }}><BrandMark/>loadfactor<span className="brand-period">.</span></Link>
       <div className="workspace-label"><span className="status-dot"/>ATHLETE WORKSPACE</div>
       <nav aria-label="Main navigation">
         {sections.map(item => <a key={item.id} href={"/" + item.id} aria-current={active === item.id ? "page" : undefined} className={"nav-item " + (active === item.id ? "active" : "")} onClick={event => { event.preventDefault(); navigate(item.id); }}><item.icon size={18}/><span>{item.label}</span>{active === item.id && <ChevronRight size={14}/>}</a>)}

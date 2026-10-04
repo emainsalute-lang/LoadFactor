@@ -16,6 +16,8 @@ a { text-decoration: none; color: inherit; }
 .sidebar { width: 236px; background: #14161b; border-right: 1px solid var(--border); padding: 33px 20px 20px; position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; }
 .brand { display: flex; align-items: center; font-size: 26px; letter-spacing: -1.3px; font-weight: 750; margin: 0 7px; }
 .brand-mark { background: var(--lime); color: #171d0b; height: 31px; width: 31px; border-radius: 8px; display: grid; place-items: center; margin-right: 10px; }
+.brand-mark { flex-shrink: 0; overflow: hidden; }
+.brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .brand-period { color: var(--lime); }
 .workspace-label { font-size: 9px; letter-spacing: 1.6px; color: #717986; display: flex; gap: 7px; align-items: center; margin: 46px 13px 18px; }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); display: inline-block; flex-shrink: 0; box-shadow: 0 0 9px #c6f42520; }

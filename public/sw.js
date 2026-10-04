@@ -1,7 +1,7 @@
-const CACHE = "loadfactor-shell-v1";
+const CACHE = "loadfactor-shell-v2";
 const OFFLINE = "/offline.html";
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll([OFFLINE, "/manifest.webmanifest", "/icon.svg"])));
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll([OFFLINE, "/manifest.webmanifest", "/logo.png", "/icon-192.png", "/icon-512.png"])));
   self.skipWaiting();
 });
 self.addEventListener("activate", event => {
