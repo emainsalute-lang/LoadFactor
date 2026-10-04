@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { ServiceError, store } from "./store";
 export const COOKIE = "loadfactor-auth";
-export async function currentUser() { return store().authenticate((await cookies()).get(COOKIE)?.value); }
+export async function currentUser() {
+  const token = (await cookies()).get(COOKIE)?.value;
+  return token ? store().authenticate(token) : null;
+}
 export async function requireUser() { const user = await currentUser(); if (!user) throw new ServiceError("Sign in to continue.", 401); return user; }
 export async function readBody(request: Request, limit = 2_000_000): Promise<unknown> {
   if (!request.headers.get("content-type")?.startsWith("application/json")) throw new ServiceError("Send a JSON request.", 415);
