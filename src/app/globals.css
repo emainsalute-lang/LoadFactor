@@ -248,3 +248,6 @@ input:not([type="range"]), select, textarea { font-size: 16px; min-height: 44px;
   .template-item { flex-wrap: wrap; gap: 10px; }
   .logger-bottom > .flex { flex-wrap: wrap; }
 }
+.empty-workspace { padding: 36px; display: grid; justify-items: start; gap: 18px; margin-bottom: 26px; }
+.empty-workspace h2 { font-size: 24px; }
+.empty-workspace p { color: var(--muted); font-size: 14px; line-height: 1.7; }

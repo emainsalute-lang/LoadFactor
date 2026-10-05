@@ -22,10 +22,10 @@ const draftSchema = z.object({
 function freshSet(exerciseId = "trap-bar-deadlift"): SetDraft {
   return { id: crypto.randomUUID(), exerciseId, weight: "", reps: "5", height: "", time: "", videoUrl: "", rpe: 7, setType: "working", superset: "", dropGroup: "", tempo: "", pause: "", test: null, broad: "", distance: exerciseId === "10m-fly" ? "10" : "", splitsText: "", protocol: "", category: jumpCategory(exerciseId), approach: "standing", leg: "both" };
 }
-export default function SessionLogger({ weightUnit, heightUnit, onSave, sessions, request, onRequestHandled, accountId, initialAssets, today, strengthSettings, defaultBodyweightKg }: {
+export default function SessionLogger({ weightUnit, heightUnit, onSave, sessions, request, onRequestHandled, accountId, browserUserId, initialAssets, today, strengthSettings, defaultBodyweightKg }: {
   weightUnit: WeightUnit; heightUnit: HeightUnit; onSave: (result: SessionSubmission, editId?: string) => void;
   strengthSettings: StrengthSettings; defaultBodyweightKg: number | null;
-  accountId?: string; initialAssets?: { custom: Exercise[]; templates: WorkoutTemplate[] }; today: string;
+  accountId?: string; browserUserId?: string; initialAssets?: { custom: Exercise[]; templates: WorkoutTemplate[] }; today: string;
   sessions: WorkoutSession[]; request: LoggerRequest | null; onRequestHandled: () => void;
 }) {
   const [sets, setSets] = useState<SetDraft[]>([]);
@@ -57,13 +57,13 @@ export default function SessionLogger({ weightUnit, heightUnit, onSave, sessions
   const catalog = [...exercises, ...custom, ...sessions.flatMap(s => s.customExercises ?? [])].filter((e, i, all) => all.findIndex(x => x.id === e.id) === i);
   const busy = useRef(false);
   const assetQueue = useRef(Promise.resolve());
-  const storageSuffix = accountId ? ":" + accountId : "";
+  const storageSuffix = accountId ? ":" + accountId : browserUserId ? ":firebase:" + browserUserId : "";
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       try {
-        const rawCatalog = accountId ? null : localStorage.getItem("loadfactor-custom-exercises-v1");
+        const rawCatalog = accountId ? null : localStorage.getItem("loadfactor-custom-exercises-v1" + storageSuffix);
         if (rawCatalog) setCustom(catalogSchema.parse(JSON.parse(rawCatalog)));
-        const rawTemplates = accountId ? null : localStorage.getItem("loadfactor-templates-v1");
+        const rawTemplates = accountId ? null : localStorage.getItem("loadfactor-templates-v1" + storageSuffix);
         if (rawTemplates) setTemplates(templatesSchema.parse(JSON.parse(rawTemplates)));
         const rawDraft = localStorage.getItem("loadfactor-draft-v1" + storageSuffix);
         if (rawDraft) {
@@ -119,7 +119,7 @@ export default function SessionLogger({ weightUnit, heightUnit, onSave, sessions
       assetQueue.current = assetQueue.current.then(async () => { await api("/api/account/workspace", "PUT", assets); window.dispatchEvent(new Event("loadfactor-assets")); setStorageNotice("Templates and exercises saved to your account."); }).catch(error => setStorageNotice(error instanceof Error ? error.message : "Account save failed. Try saving again before leaving."));
       return true;
     }
-    try { localStorage.setItem(key, JSON.stringify(value)); window.dispatchEvent(new Event("loadfactor-assets")); setStorageNotice("Saved to this browser."); return true; }
+    try { localStorage.setItem(key + storageSuffix, JSON.stringify(value)); window.dispatchEvent(new Event("loadfactor-assets")); setStorageNotice("Saved to this browser."); return true; }
     catch { setStorageNotice("Browser storage could not save your changes. They remain available during this visit."); return false; }
   }
   function addCustom() {
@@ -226,7 +226,7 @@ export default function SessionLogger({ weightUnit, heightUnit, onSave, sessions
     finally { busy.current = false; }
   }
   return <section id="logger" className="panel logger-panel scroll-mt-6">
-    <div className="section-title"><div className="flex items-center gap-3"><span className="icon-box"><Dumbbell size={20}/></span><div><span className="eyebrow">PUT IN THE WORK</span><h2>Session logger</h2></div></div><span className="subtle-pill">{editId ? "Editing session" : accountId ? "Account storage" : "Local demo"}</span></div>
+    <div className="section-title"><div className="flex items-center gap-3"><span className="icon-box"><Dumbbell size={20}/></span><div><span className="eyebrow">PUT IN THE WORK</span><h2>Session logger</h2></div></div><span className="subtle-pill">{editId ? "Editing session" : accountId ? "Account storage" : "Browser storage"}</span></div>
     {storageNotice && <p className="success-message" role="status">{storageNotice}</p>}
     <div className="phase-controls">
       <label className="field-label">Workout templates<select aria-label="Load workout template" value="" disabled={!loaded || sets.length > 0} onChange={e => { const t = templates.find(t => t.id === e.target.value); if (t) loadTemplate(t); }}><option value="">Choose a template</option>{templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>

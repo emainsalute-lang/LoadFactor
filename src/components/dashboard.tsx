@@ -46,8 +46,8 @@ const sections = [
 ] as const;
 type SectionId = (typeof sections)[number]["id"];
 export type DashboardSection = SectionId;
-function readSavedSessions(): SessionSubmission[] {
-  const raw = localStorage.getItem(STORAGE_KEY);
+function readSavedSessions(storageKey: string): SessionSubmission[] {
+  const raw = localStorage.getItem(storageKey);
   if (!raw) return [];
   const entries: unknown = JSON.parse(raw);
   if (!Array.isArray(entries)) return [];
@@ -64,6 +64,8 @@ function readSavedSessions(): SessionSubmission[] {
 }
 export default function Dashboard({ initialData, today: initialToday, account, initialWorkspace, section = "overview" }: { initialData: Data; today: string; account: AccountUser | null; initialWorkspace: AccountWorkspace | null; section?: SectionId }) {
   const firebaseUser = useFirebaseUser();
+  const browserStorageSuffix = firebaseUser ? ":firebase:" + firebaseUser.uid : "";
+  const browserWorkspaceKey = "loadfactor-workspace-v2" + browserStorageSuffix;
   const [today, setToday] = useState(initialToday);
   const [saved, setSaved] = useState<SessionSubmission[]>(initialWorkspace?.records ?? []);
   const [hidden, setHidden] = useState<string[]>([]);
@@ -95,19 +97,19 @@ export default function Dashboard({ initialData, today: initialToday, account, i
     const frame = requestAnimationFrame(() => {
     if (account) { setReady(true); return; }
     try {
-      const raw = localStorage.getItem("loadfactor-workspace-v2");
+      const raw = localStorage.getItem(browserWorkspaceKey);
       if (raw) {
         const state = JSON.parse(raw);
         if (!Array.isArray(state.records) || !Array.isArray(state.hidden)) throw new Error("Invalid workspace");
         setSaved(state.records.flatMap((v: unknown) => { const r = rebuildRecord(v); return r ? [r] : []; }));
         setHidden(state.hidden.filter((v: unknown) => typeof v === "string"));
-      } else setSaved(readSavedSessions());
+      } else setSaved(readSavedSessions(STORAGE_KEY + browserStorageSuffix));
     }
     catch { setStorageError("Browser storage is unavailable or unreadable. New sessions will remain available during this visit."); }
     setReady(true);
     });
     return () => cancelAnimationFrame(frame);
-  }, [account]);
+  }, [account, browserWorkspaceKey, browserStorageSuffix]);
   useEffect(() => {
     if (!account) return;
     let stopped = false, inFlight = false;
@@ -173,7 +175,7 @@ export default function Dashboard({ initialData, today: initialToday, account, i
   function persist(next: SessionSubmission[], removed: string[]) {
     setSaved(next); setHidden(removed);
     if (account) return;
-    try { localStorage.setItem("loadfactor-workspace-v2", JSON.stringify({ records: next, hidden: removed })); setStorageError(""); }
+    try { localStorage.setItem(browserWorkspaceKey, JSON.stringify({ records: next, hidden: removed })); setStorageError(""); }
     catch { setStorageError("Changes are available during this visit, but could not be saved. Export your data before leaving."); }
   }
   function onSave(result: SessionSubmission, editId?: string) {
@@ -273,7 +275,7 @@ export default function Dashboard({ initialData, today: initialToday, account, i
         {offlineQueue.length > 0 && <section className="panel p-4 mb-4" aria-label="Offline sync queue"><strong>{offlineQueue.filter(item => item.state === "pending").length} session(s) waiting to sync</strong>{offlineQueue.filter(item => item.state === "conflict" && item.serverRecord).map(item => <div className="template-item" key={item.clientId}><span>Conflict: “{item.session.title}” shares an ID with a server workout.</span><button className="text-button" type="button" onClick={() => void resolveOfflineConflict(item, "server")}>Keep server version</button><button className="text-button" type="button" onClick={() => void resolveOfflineConflict(item, "local")}>Replace with offline version</button></div>)}</section>}
         {storageError && <p className="error-message" role="alert">{storageError}</p>}
         {active === "overview" && <>
-        {!account && <div className="demo-notice"><span className="demo-badge">DEMO WORKSPACE</span><p>Explore sample workouts. Workouts you add are saved in this browser.</p><button type="button" className="text-button" onClick={() => navigate("settings")}>Account options</button></div>}
+        {!account && !firebaseUser && <div className="demo-notice"><span className="demo-badge">BROWSER WORKSPACE</span><p>Workouts you add are saved in this browser.</p><button type="button" className="text-button" onClick={() => navigate("settings")}>Account options</button></div>}
         <section className="quick-actions" aria-label="Start here">
           {[
             { id: "logger" as const, icon: Dumbbell, title: "Record a workout", text: "Add your exercises and sets.", action: "Start logging" },
@@ -281,7 +283,8 @@ export default function Dashboard({ initialData, today: initialToday, account, i
             { id: "wellness" as const, icon: Gauge, title: "How are you feeling?", text: "Check in on sleep, energy and recovery.", action: "Daily check-in" },
           ].map(item => <button type="button" className="quick-action" key={item.id} onClick={() => navigate(item.id)}><span className="quick-action-icon"><item.icon size={22}/></span><strong>{item.title}</strong><span>{item.text}</span><span className="quick-action-link">{item.action}<ChevronRight size={16}/></span></button>)}
         </section>
-        <div className="overview-toolbar"><div className="flex items-center gap-2"><span className="status-dot"/><span>Performance snapshot</span><span className="demo-badge">{account ? "ACCOUNT DATA" : firebaseUser ? "BROWSER DATA" : "DEMO DATA"}</span></div><span>{parseDate(today).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}</span></div>
+        <div className="overview-toolbar"><div className="flex items-center gap-2"><span className="status-dot"/><span>Performance snapshot</span><span className="demo-badge">{account ? "ACCOUNT DATA" : firebaseUser ? "BROWSER DATA" : "BROWSER DATA"}</span></div><span>{parseDate(today).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}</span></div>
+        {data.sessions.length === 0 ? <section className="panel empty-workspace"><span className="icon-box"><Dumbbell size={24}/></span><h2>No workouts yet</h2><p>Your metrics and charts will appear after you record or import your first workout.</p><div className="flex flex-wrap gap-3"><button type="button" className="primary-button" onClick={() => navigate("logger")}>Record your first workout</button><button type="button" className="secondary-button" onClick={() => navigate("history")}>Import workouts</button></div></section> : <>
         <div className="metric-grid">
           <Metric title="Vertical jump PR" icon={<MoveUpRight size={19}/>} value={summary.verticalPr === null ? "—" : heightFromCm(summary.verticalPr, heightUnit).toFixed(1)} unit={heightUnit} foot="All-time personal best" color="lime" badge={<><ArrowUpRight size={13}/>Explosive power</>}/>
           <Metric title="10m fly sprint" icon={<Timer size={19}/>} value={summary.sprintPr?.toFixed(2) ?? "—"} unit="sec" foot="Fastest recorded split" color="blue" badge={<><ArrowDownRight size={13}/>Speed benchmark</>}/>
@@ -292,6 +295,7 @@ export default function Dashboard({ initialData, today: initialToday, account, i
         <PerformanceCharts jumps={charts.jumps} volume={charts.volume} heightUnit={heightUnit} weightUnit={weightUnit}/>
         <div className="momentum-banner"><span className="momentum-icon"><Zap size={22}/></span><div><strong>The work adds up.</strong><p>You’ve logged {summary.weeklySessions} sessions this week. Keep building your baseline.</p></div><span className="momentum-tag"><span className="status-dot"/>STAY CONSISTENT</span></div>
         </>}
+        </>}
         {active === "tests" && <TestAnalysis sessions={data.sessions} heightUnit={heightUnit}/>}
         {active === "wellness" && <WellnessDashboard checkIns={wellness} onCheckIns={updateWellness} sessions={data.sessions} today={today} accountId={account?.id} weightUnit={weightUnit} heightUnit={heightUnit}/>}
         {active === "planning" && <TrainingPlanner planning={planning} onPlanning={updatePlanning} sessions={data.sessions} today={today} accountId={account?.id} timezone={account?.timezone} templates={initialWorkspace?.templates ?? []} weightUnit={weightUnit} onStart={startPlanned} onLink={linkPlanned}/>}
@@ -301,7 +305,7 @@ export default function Dashboard({ initialData, today: initialToday, account, i
         {firebaseUser ? <section className="panel account-panel"><h2>Firebase account</h2><p className="account-description">Signed in as {firebaseUser.email}. Your LoadFactor workouts are currently saved in this browser. Cloud account sync is not connected yet.</p><button className="secondary-button" type="button" onClick={() => void signOut(firebaseAuth)}>Sign out</button></section> : <AccountPanel account={account}/>}
         <section className="panel preferences"><div><h2>Make it your own</h2><p>{account ? "Preview units below. Save permanent preferences in Account & data." : "Your preferred units, across every chart and metric."}</p></div><div className="flex flex-wrap gap-3"><label className="field-label">Weight<select value={weightUnit} onChange={e => setWeightUnit(e.target.value as WeightUnit)}><option value="kg">Kilograms (kg)</option><option value="lbs">Pounds (lbs)</option></select></label><label className="field-label">Jump height<select value={heightUnit} onChange={e => setHeightUnit(e.target.value as HeightUnit)}><option value="in">Inches (in)</option><option value="cm">Centimeters (cm)</option></select></label></div></section>
         </>}
-        {active === "logger" && <SessionLogger defaultBodyweightKg={account ? account.bodyweightKg ?? null : demoUser.bodyweightKg ?? null} strengthSettings={strengthSettings} key={account?.id ?? "demo"} accountId={account?.id} initialAssets={initialWorkspace ? { custom: initialWorkspace.custom, templates: initialWorkspace.templates } : undefined} today={today} weightUnit={weightUnit} heightUnit={heightUnit} onSave={onSave} sessions={data.sessions} request={request} onRequestHandled={() => setRequest(null)}/>}
+        {active === "logger" && <SessionLogger defaultBodyweightKg={account?.bodyweightKg ?? null} strengthSettings={strengthSettings} key={account?.id ?? firebaseUser?.uid ?? "browser"} browserUserId={firebaseUser?.uid} accountId={account?.id} initialAssets={initialWorkspace ? { custom: initialWorkspace.custom, templates: initialWorkspace.templates } : undefined} today={today} weightUnit={weightUnit} heightUnit={heightUnit} onSave={onSave} sessions={data.sessions} request={request} onRequestHandled={() => setRequest(null)}/>}
         {active === "history" && <>
         <TrainingHistory sessions={data.sessions} today={today} weightUnit={weightUnit} heightUnit={heightUnit} accountId={account?.id} initialFilters={initialWorkspace?.savedFilters ?? []} ready={ready} deleted={!!deleted} onUndo={() => void undoDelete()} onEdit={openSession} onDelete={id => void removeSession(id)} onExport={exportData}/>
         <SessionCsvTools sessions={data.sessions} today={today} onImport={importCsvSession}/>
