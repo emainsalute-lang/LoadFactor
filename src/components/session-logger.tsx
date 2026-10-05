@@ -11,6 +11,7 @@ import { enqueueOfflineSession } from "@/lib/offline-queue";
 import { testDetailSchema, sessionSchemaFor, type StrengthSettings } from "@/lib/validation";
 import type { Exercise, ExerciseKind, HeightUnit, SetType, SessionSubmission, WeightUnit, WorkoutSession } from "@/lib/types";
 import { jumpCategory } from "@/lib/tests-analysis";
+import { formIssueMessage, parseSprintSplits } from "@/lib/form-numbers";
 type SetDraft = { id: string; exerciseId: string; weight: string; reps: string; height: string; time: string; videoUrl: string; rpe: number; setType: SetType; superset: string; dropGroup: string; tempo: string; pause: string; test: ExerciseLogTest; broad: string; distance: string; splitsText: string; protocol: string; category: string; approach: string; leg: string };
 type ExerciseLogTest = import("@/lib/types").ExerciseLog["test"];
 const draftSchema = z.object({
@@ -134,16 +135,23 @@ export default function SessionLogger({ weightUnit, heightUnit, onSave, sessions
     return {
       durationMinutes: duration.trim() ? Number(duration) : null, sessionRpe: sessionRpe.trim() ? Number(sessionRpe) : null,
       plannedWorkoutId, title, date, notes, bodyweightKg: bodyweight.trim() ? weightToKg(Number(bodyweight), units.weight) : null, tags: tags.split(",").map(t => t.trim()).filter(Boolean), customExercises: catalog.filter(e => e.id.startsWith("custom-") && sets.some(s => s.exerciseId === e.id)),
-      exercises: sets.map(set => {
+      exercises: sets.map((set, index) => {
         const kind = catalog.find(e => e.id === set.exerciseId)?.kind;
-        return { test: kind === "strength" ? null : { jumpCategory: set.category || jumpCategory(set.exerciseId), approach: set.approach, leg: set.leg, broadJumpCm: kind === "jump" && (set.category || jumpCategory(set.exerciseId)) === "broad" && set.broad.trim() ? heightToCm(Number(set.broad), units.height) : null, distanceM: kind === "sprint" && set.distance.trim() ? Number(set.distance) : null, splits: kind === "sprint" && set.splitsText.trim() ? set.splitsText.split(",").map(part => { const pieces = part.trim().split(":"); return { distanceM: pieces.length === 2 ? Number(pieces[0]) : NaN, seconds: pieces.length === 2 ? Number(pieces[1]) : NaN }; }) : [], protocol: set.protocol }, videoUrl: set.videoUrl.trim() || null, setType: set.setType, superset: set.superset.trim() || null, dropGroup: set.dropGroup.trim() || null, tempo: set.tempo.trim() || null, pauseSeconds: set.pause.trim() ? Number(set.pause) : null, exerciseId: set.exerciseId, weightKg: weightToKg(Number(set.weight), units.weight), reps: set.reps.trim() ? Number(set.reps) : 0, jumpHeightCm: kind === "jump" && (set.category || jumpCategory(set.exerciseId)) !== "broad" && set.height.trim() ? heightToCm(Number(set.height), units.height) : null, splitTimeSeconds: kind === "sprint" && set.time.trim() ? Number(set.time) : null, rpe: set.rpe };
+        if (kind === "sprint") {
+          try { parseSprintSplits(set.splitsText); }
+          catch (error) { throw new Error(`Set ${index + 1}: ${error instanceof Error ? error.message : "Check sprint splits."}`); }
+        }
+        return { test: kind === "strength" ? null : { jumpCategory: set.category || jumpCategory(set.exerciseId), approach: set.approach, leg: set.leg, broadJumpCm: kind === "jump" && (set.category || jumpCategory(set.exerciseId)) === "broad" && set.broad.trim() ? heightToCm(Number(set.broad), units.height) : null, distanceM: kind === "sprint" && set.distance.trim() ? Number(set.distance) : null, splits: kind === "sprint" && set.splitsText.trim() ? parseSprintSplits(set.splitsText) : [], protocol: set.protocol }, videoUrl: set.videoUrl.trim() || null, setType: set.setType, superset: set.superset.trim() || null, dropGroup: set.dropGroup.trim() || null, tempo: set.tempo.trim() || null, pauseSeconds: set.pause.trim() ? Number(set.pause) : null, exerciseId: set.exerciseId, weightKg: weightToKg(Number(set.weight), units.weight), reps: set.reps.trim() ? Number(set.reps) : 0, jumpHeightCm: kind === "jump" && (set.category || jumpCategory(set.exerciseId)) !== "broad" && set.height.trim() ? heightToCm(Number(set.height), units.height) : null, splitTimeSeconds: kind === "sprint" && set.time.trim() ? Number(set.time) : null, rpe: set.rpe };
       }),
     };
   }
   function saveTemplate() {
-    const parsed = sessionSchemaFor(() => today).safeParse(inputData());
+    let input;
+    try { input = inputData(); }
+    catch (error) { setError(error instanceof Error ? error.message : "Check your session details."); return; }
+    const parsed = sessionSchemaFor(() => today).safeParse(input);
     if (!templateName.trim()) { setError("Name your template first."); return; }
-    if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? "Complete your sets first."); return; }
+    if (!parsed.success) { setError(formIssueMessage(parsed.error.issues[0])); return; }
     if (templates.length >= 50) { setError("The template limit is 50. Remove one first."); return; }
     const next = [...templates, { id: crypto.randomUUID(), name: templateName.trim(), input: parsed.data }];
     setTemplates(next); store("loadfactor-templates-v1", next); setTemplateName(""); setError("");
@@ -191,9 +199,11 @@ export default function SessionLogger({ weightUnit, heightUnit, onSave, sessions
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (busy.current) return;
-    const input = inputData();
+    let input;
+    try { input = inputData(); }
+    catch (error) { setError(error instanceof Error ? error.message : "Check your session details."); return; }
     const parsed = sessionSchemaFor(() => today).safeParse(input);
-    if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? "Check your session details."); return; }
+    if (!parsed.success) { setError(formIssueMessage(parsed.error.issues[0])); return; }
     busy.current = true; setStatus("saving"); setError("");
     try {
       const response = await fetch(accountId && editId ? "/api/sessions/" + editId : "/api/sessions", { method: accountId && editId ? "PUT" : "POST", headers: { "Content-Type": "application/json", ...(accountId ? { "X-LoadFactor-Account": accountId } : {}) }, body: JSON.stringify(parsed.data) });
