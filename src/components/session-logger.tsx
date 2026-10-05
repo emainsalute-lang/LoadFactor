@@ -209,6 +209,7 @@ export default function SessionLogger({ weightUnit, heightUnit, onSave, sessions
       const response = await fetch(accountId && editId ? "/api/sessions/" + editId : "/api/sessions", { method: accountId && editId ? "PUT" : "POST", headers: { "Content-Type": "application/json", ...(accountId ? { "X-LoadFactor-Account": accountId } : {}) }, body: JSON.stringify(parsed.data) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? "Could not save this session.");
+      try { localStorage.removeItem("loadfactor-draft-v1" + storageSuffix); } catch { /* Saving succeeded even if browser draft cleanup is unavailable. */ }
       onSave(result as SessionSubmission, editId);
       setEditId(undefined);
       setPlannedWorkoutId(null);
@@ -221,6 +222,7 @@ export default function SessionLogger({ weightUnit, heightUnit, onSave, sessions
           local.session.userId = accountId;
           local.metrics = local.metrics.map(metric => ({ ...metric, userId: accountId }));
           await enqueueOfflineSession({ clientId: local.session.id, accountId, session: parsed.data, state: "pending" });
+          try { localStorage.removeItem("loadfactor-draft-v1" + storageSuffix); } catch { /* The session is already stored in the offline queue. */ }
           onSave(local);
           setEditId(undefined); setPlannedWorkoutId(null); setStatus("saved"); setSets([]); setNotes(""); setTags(""); setOpen(false); setDuration(""); setSessionRpe("");
           setError("");

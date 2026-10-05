@@ -2,14 +2,14 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#101216">
+<meta name="theme-color" content="#faf9f5">
 <title>Offline workout log · LoadFactor</title>
 <link rel="icon" href="/favicon.ico">
 <style>
-body{margin:0;padding:2rem;background:#101216;color:#edf0f5;font:16px system-ui,sans-serif}main{max-width:36rem;margin:auto}label{display:block;margin:1rem 0}input,select,button{box-sizing:border-box;width:100%;padding:.8rem;border:1px solid #454b55;border-radius:.4rem;background:#191c22;color:inherit}button{background:#c6f467;color:#171d0b;font-weight:700}p{color:#aeb5c0}
+body{margin:0;padding:2rem;background:#faf9f5;color:#252a32;font:16px system-ui,sans-serif}main{max-width:36rem;margin:auto}label{display:block;margin:1rem 0}input,select,button{box-sizing:border-box;width:100%;padding:.8rem;border:1px solid #deded5;border-radius:.4rem;background:#ffffff;color:inherit}button{background:#f5cc35;color:#171d0b;font-weight:700}p{color:#606875}
 </style>
 <main>
-<a href="/" aria-label="LoadFactor home"><img src="/logo.png" alt="LoadFactor" width="48" height="48" style="background:#c6f467;border-radius:10px"></a>
+<a href="/" aria-label="LoadFactor home"><img src="/logo.png" alt="LoadFactor" width="48" height="48" style="background:#f5cc35;border-radius:10px"></a>
 <h1>Offline session logger</h1>
 <p>Quick-log a strength, jump, or sprint session while offline. It will sync when you return to LoadFactor and sign in to the same account.</p>
 <form id="log">
@@ -24,7 +24,7 @@ body{margin:0;padding:2rem;background:#101216;color:#edf0f5;font:16px system-ui,
 <label id="distance-field" hidden>Sprint distance (m)<input name="distanceM" type="number" min="0.01" max="10000" step="any"></label>
 <label id="time-field" hidden>Sprint time (seconds)<input name="splitTimeSeconds" type="number" min="0.001" max="3600" step="any"></label>
 <button>Save offline session</button>
-</form><p id="status" role="status"></p><p><a href="/" style="color:#c6f467">Return to the app</a></p>
+</form><p id="status" role="status"></p><p><a href="/" style="color:#806000">Return to the app</a></p>
 </main>
 <script>
 const localDate=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};

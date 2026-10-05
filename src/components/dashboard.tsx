@@ -8,6 +8,7 @@ import { useFirebaseUser } from "./firebase-auth";
 import { Activity, ArrowDownRight, ArrowUpRight, ChevronRight, Dumbbell, Flame, Gauge, LayoutDashboard, MoveUpRight, Plus, Settings2, Timer, TrendingUp, Zap } from "lucide-react";
 import PerformanceCharts from "./performance-charts";
 import SessionLogger from "./session-logger";
+import WorkoutResults from "./workout-results";
 import CoachingPanel from "./coaching-panel";
 import AccountPanel from "./account-panel";
 import TrainingHistory from "./training-history";
@@ -70,6 +71,7 @@ export default function Dashboard({ initialData, today: initialToday, account, i
   const [saved, setSaved] = useState<SessionSubmission[]>(initialWorkspace?.records ?? []);
   const [hidden, setHidden] = useState<string[]>([]);
   const [deleted, setDeleted] = useState<{ id: string; record?: SessionSubmission } | null>(null);
+  const [completedWorkout, setCompletedWorkout] = useState<WorkoutSession | null>(null);
   const [request, setRequest] = useState<LoggerRequest | null>(null);
   const [ready, setReady] = useState(false);
   const [storageError, setStorageError] = useState("");
@@ -212,11 +214,11 @@ export default function Dashboard({ initialData, today: initialToday, account, i
     persist(deleted.record ? [...saved, deleted.record] : saved, hidden.filter(id => id !== deleted.id)); setDeleted(null);
   }
   function openSession(session: WorkoutSession, mode: "edit" | "duplicate") {
-    setRequest({ session, mode }); navigate("logger");
+    setCompletedWorkout(null); setRequest({ session, mode }); navigate("logger");
   }
   function startPlanned(plan: PlannedWorkout) {
     const result = createSession({ ...plan.input, date: today, plannedWorkoutId: plan.id });
-    setRequest({ session: result.session, mode: "planned" }); navigate("logger");
+    setCompletedWorkout(null); setRequest({ session: result.session, mode: "planned" }); navigate("logger");
   }
   async function linkPlanned(session: WorkoutSession, planId: string | null) {
     const input = sessionInputSchema.parse({ ...session, plannedWorkoutId: planId });
@@ -305,12 +307,13 @@ export default function Dashboard({ initialData, today: initialToday, account, i
         {firebaseUser ? <section className="panel account-panel"><h2>Firebase account</h2><p className="account-description">Signed in as {firebaseUser.email}. Your LoadFactor workouts are currently saved in this browser. Cloud account sync is not connected yet.</p><button className="secondary-button" type="button" onClick={() => void signOut(firebaseAuth)}>Sign out</button></section> : <AccountPanel account={account}/>}
         <section className="panel preferences"><div><h2>Make it your own</h2><p>{account ? "Preview units below. Save permanent preferences in Account & data." : "Your preferred units, across every chart and metric."}</p></div><div className="flex flex-wrap gap-3"><label className="field-label">Weight<select value={weightUnit} onChange={e => setWeightUnit(e.target.value as WeightUnit)}><option value="kg">Kilograms (kg)</option><option value="lbs">Pounds (lbs)</option></select></label><label className="field-label">Jump height<select value={heightUnit} onChange={e => setHeightUnit(e.target.value as HeightUnit)}><option value="in">Inches (in)</option><option value="cm">Centimeters (cm)</option></select></label></div></section>
         </>}
-        {active === "logger" && <SessionLogger defaultBodyweightKg={account?.bodyweightKg ?? null} strengthSettings={strengthSettings} key={account?.id ?? firebaseUser?.uid ?? "browser"} browserUserId={firebaseUser?.uid} accountId={account?.id} initialAssets={initialWorkspace ? { custom: initialWorkspace.custom, templates: initialWorkspace.templates } : undefined} today={today} weightUnit={weightUnit} heightUnit={heightUnit} onSave={onSave} sessions={data.sessions} request={request} onRequestHandled={() => setRequest(null)}/>}
+        {active === "logger" && completedWorkout && <><p className="success-message" role="status">Workout saved. Your results are ready.</p><WorkoutResults session={completedWorkout} weightUnit={weightUnit} heightUnit={heightUnit}/><div className="results-actions"><button type="button" className="primary-button" onClick={() => setCompletedWorkout(null)}>Log another workout</button><button type="button" className="secondary-button" onClick={() => navigate("history")}>Training history</button><button type="button" className="secondary-button" onClick={() => navigate("overview")}>Weekly progress</button></div></>}
+        {active === "logger" && !completedWorkout && <SessionLogger defaultBodyweightKg={account?.bodyweightKg ?? null} strengthSettings={strengthSettings} key={account?.id ?? firebaseUser?.uid ?? "browser"} browserUserId={firebaseUser?.uid} accountId={account?.id} initialAssets={initialWorkspace ? { custom: initialWorkspace.custom, templates: initialWorkspace.templates } : undefined} today={today} weightUnit={weightUnit} heightUnit={heightUnit} onSave={(result, editId) => { onSave(result, editId); setCompletedWorkout(result.session); window.requestAnimationFrame(() => document.getElementById("workout-results-heading")?.scrollIntoView({ block: "start" })); }} sessions={data.sessions} request={request} onRequestHandled={() => setRequest(null)}/>}
         {active === "history" && <>
         <TrainingHistory sessions={data.sessions} today={today} weightUnit={weightUnit} heightUnit={heightUnit} accountId={account?.id} initialFilters={initialWorkspace?.savedFilters ?? []} ready={ready} deleted={!!deleted} onUndo={() => void undoDelete()} onEdit={openSession} onDelete={id => void removeSession(id)} onExport={exportData}/>
         <SessionCsvTools sessions={data.sessions} today={today} onImport={importCsvSession}/>
         </>}
-        <footer><a href="#" className="footer-brand">loadfactor.</a><p>{ready ? (account ? "Account workspace - Sessions saved on the server" : "Demo workspace · Sessions saved in this browser") : "Loading your workspace…"}<span>Built for the athletes who put in the work.</span></p></footer>
+        <footer><a href="#" className="footer-brand">loadfactor.</a><p>{ready ? (account ? "Account workspace - Sessions saved on the server" : "Browser workspace · Sessions saved in this browser") : "Loading your workspace…"}<span>Built for the athletes who put in the work.</span></p></footer>
       </main>
     </div>
   </div>;

@@ -4,7 +4,7 @@ import { ArrowUpRight, BarChart3, MoveUpRight } from "lucide-react";
 import type { HeightUnit, WeightUnit } from "@/lib/types";
 import { heightFromCm, weightFromKg } from "@/lib/analytics";
 interface Point { date: string; label: string; value: number }
-const tooltipStyle = { background: "#20232a", border: "1px solid #383d47", borderRadius: 10, color: "#f3f4f6", fontSize: 12 };
+const tooltipStyle = { background: "#ffffff", border: "1px solid #deded5", borderRadius: 10, color: "#252a32", fontSize: 12 };
 export default function PerformanceCharts({ jumps, volume, heightUnit, weightUnit }: {
   jumps: Point[]; volume: Point[]; heightUnit: HeightUnit; weightUnit: WeightUnit;
 }) {
@@ -18,11 +18,11 @@ export default function PerformanceCharts({ jumps, volume, heightUnit, weightUni
       <div className="chart" role="img" aria-label={"Vertical jump chart with " + jumpPoints.length + " daily best measurements"}>
         {jumpPoints.length ? <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <LineChart data={jumpPoints} margin={{ top: 15, right: 16, left: -22, bottom: 0 }}>
-            <CartesianGrid stroke="#292d35" strokeDasharray="3 5" vertical={false}/>
-            <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "#858b97", fontSize: 11 }} minTickGap={36} dy={10}/>
-            <YAxis domain={["dataMin - 2", "dataMax + 2"]} axisLine={false} tickLine={false} tick={{ fill: "#858b97", fontSize: 11 }} tickFormatter={value => Number(value).toFixed(0)}/>
+            <CartesianGrid stroke="#e6e5dc" strokeDasharray="3 5" vertical={false}/>
+            <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "#606875", fontSize: 11 }} minTickGap={36} dy={10}/>
+            <YAxis domain={["dataMin - 2", "dataMax + 2"]} axisLine={false} tickLine={false} tick={{ fill: "#606875", fontSize: 11 }} tickFormatter={value => Number(value).toFixed(0)}/>
             <Tooltip contentStyle={tooltipStyle} formatter={value => [String(value) + " " + heightUnit, "Jump height"]}/>
-            <Line type="monotone" dataKey="value" stroke="#c6f467" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: "#c6f467", stroke: "#171a20", strokeWidth: 3 }}/>
+            <Line type="monotone" dataKey="value" stroke="#c99b0b" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: "#c99b0b", stroke: "#ffffff", strokeWidth: 3 }}/>
           </LineChart>
         </ResponsiveContainer> : <p className="empty">Log a jump to start tracking your progress.</p>}
       </div>
@@ -34,11 +34,11 @@ export default function PerformanceCharts({ jumps, volume, heightUnit, weightUni
       <div className="chart" role="img" aria-label="Total volume per training week">
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <BarChart data={volumePoints} margin={{ top: 15, right: 8, left: -14, bottom: 0 }}>
-            <CartesianGrid stroke="#292d35" strokeDasharray="3 5" vertical={false}/>
-            <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "#858b97", fontSize: 11 }} minTickGap={16} dy={10}/>
-            <YAxis axisLine={false} tickLine={false} tick={{ fill: "#858b97", fontSize: 11 }} tickFormatter={value => Number(value) >= 1000 ? (Number(value) / 1000).toFixed(0) + "k" : String(value)}/>
-            <Tooltip cursor={{ fill: "#ffffff05" }} contentStyle={tooltipStyle} formatter={value => [Number(value).toLocaleString() + " " + weightUnit, "Volume"]}/>
-            <Bar dataKey="value" fill="#79c8ed" radius={[5, 5, 0, 0]} maxBarSize={34}/>
+            <CartesianGrid stroke="#e6e5dc" strokeDasharray="3 5" vertical={false}/>
+            <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "#606875", fontSize: 11 }} minTickGap={16} dy={10}/>
+            <YAxis axisLine={false} tickLine={false} tick={{ fill: "#606875", fontSize: 11 }} tickFormatter={value => Number(value) >= 1000 ? (Number(value) / 1000).toFixed(0) + "k" : String(value)}/>
+            <Tooltip cursor={{ fill: "#c99b0b12" }} contentStyle={tooltipStyle} formatter={value => [Number(value).toLocaleString() + " " + weightUnit, "Volume"]}/>
+            <Bar dataKey="value" fill="#6c7280" radius={[5, 5, 0, 0]} maxBarSize={34}/>
           </BarChart>
         </ResponsiveContainer>
       </div>
