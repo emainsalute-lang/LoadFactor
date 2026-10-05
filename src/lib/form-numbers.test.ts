@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { formIssueMessage, parseSprintSplits } from "./form-numbers";
+import { formIssueMessage, parseFormNumber, parseSprintSplits } from "./form-numbers";
 
 describe("numeric form input", () => {
+  it("keeps optional numbers empty and uses explicit defaults only for blank input", () => {
+    expect(parseFormNumber("", "Bodyweight")).toBeNull();
+    expect(parseFormNumber(" ", "Weight", 0)).toBe(0);
+    expect(parseFormNumber("12.5", "Weight")).toBe(12.5);
+  });
+  it.each(["NaN", "undefined", "12,5", "60kg", "Infinity"])("rejects invalid numeric drafts without silently replacing them: %s", value => {
+    expect(() => parseFormNumber(value, "Set 1 weight", 0)).toThrow("Set 1 weight: enter a valid number");
+  });
   it("accepts optional empty splits and valid decimal splits", () => {
     expect(parseSprintSplits("  ")).toEqual([]);
     expect(parseSprintSplits("10:1.8, 20:3.2")).toEqual([{ distanceM: 10, seconds: 1.8 }, { distanceM: 20, seconds: 3.2 }]);

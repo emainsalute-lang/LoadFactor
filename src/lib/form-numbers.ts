@@ -1,5 +1,13 @@
 import type { ZodIssue } from "zod";
 
+export function parseFormNumber(value: string, label: string, emptyValue: number | null = null): number | null {
+  const text = value.trim();
+  if (!text) return emptyValue;
+  const parsed = Number(text);
+  if (!Number.isFinite(parsed)) throw new Error(`${label}: enter a valid number using a decimal point, for example 12.5.`);
+  return parsed;
+}
+
 export function parseSprintSplits(value: string) {
   if (!value.trim()) return [];
   return value.split(",").map((part, index) => {

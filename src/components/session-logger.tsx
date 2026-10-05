@@ -11,7 +11,7 @@ import { enqueueOfflineSession } from "@/lib/offline-queue";
 import { testDetailSchema, sessionSchemaFor, type StrengthSettings } from "@/lib/validation";
 import type { Exercise, ExerciseKind, HeightUnit, SetType, SessionSubmission, WeightUnit, WorkoutSession } from "@/lib/types";
 import { jumpCategory } from "@/lib/tests-analysis";
-import { formIssueMessage, parseSprintSplits } from "@/lib/form-numbers";
+import { formIssueMessage, parseFormNumber, parseSprintSplits } from "@/lib/form-numbers";
 type SetDraft = { id: string; exerciseId: string; weight: string; reps: string; height: string; time: string; videoUrl: string; rpe: number; setType: SetType; superset: string; dropGroup: string; tempo: string; pause: string; test: ExerciseLogTest; broad: string; distance: string; splitsText: string; protocol: string; category: string; approach: string; leg: string };
 type ExerciseLogTest = import("@/lib/types").ExerciseLog["test"];
 const draftSchema = z.object({
@@ -133,15 +133,15 @@ export default function SessionLogger({ weightUnit, heightUnit, onSave, sessions
   }
   function inputData() {
     return {
-      durationMinutes: duration.trim() ? Number(duration) : null, sessionRpe: sessionRpe.trim() ? Number(sessionRpe) : null,
-      plannedWorkoutId, title, date, notes, bodyweightKg: bodyweight.trim() ? weightToKg(Number(bodyweight), units.weight) : null, tags: tags.split(",").map(t => t.trim()).filter(Boolean), customExercises: catalog.filter(e => e.id.startsWith("custom-") && sets.some(s => s.exerciseId === e.id)),
+      durationMinutes: duration.trim() ? parseFormNumber(duration, "Duration")! : null, sessionRpe: sessionRpe.trim() ? parseFormNumber(sessionRpe, "Overall effort")! : null,
+      plannedWorkoutId, title, date, notes, bodyweightKg: bodyweight.trim() ? weightToKg(parseFormNumber(bodyweight, "Bodyweight")!, units.weight) : null, tags: tags.split(",").map(t => t.trim()).filter(Boolean), customExercises: catalog.filter(e => e.id.startsWith("custom-") && sets.some(s => s.exerciseId === e.id)),
       exercises: sets.map((set, index) => {
         const kind = catalog.find(e => e.id === set.exerciseId)?.kind;
         if (kind === "sprint") {
           try { parseSprintSplits(set.splitsText); }
           catch (error) { throw new Error(`Set ${index + 1}: ${error instanceof Error ? error.message : "Check sprint splits."}`); }
         }
-        return { test: kind === "strength" ? null : { jumpCategory: set.category || jumpCategory(set.exerciseId), approach: set.approach, leg: set.leg, broadJumpCm: kind === "jump" && (set.category || jumpCategory(set.exerciseId)) === "broad" && set.broad.trim() ? heightToCm(Number(set.broad), units.height) : null, distanceM: kind === "sprint" && set.distance.trim() ? Number(set.distance) : null, splits: kind === "sprint" && set.splitsText.trim() ? parseSprintSplits(set.splitsText) : [], protocol: set.protocol }, videoUrl: set.videoUrl.trim() || null, setType: set.setType, superset: set.superset.trim() || null, dropGroup: set.dropGroup.trim() || null, tempo: set.tempo.trim() || null, pauseSeconds: set.pause.trim() ? Number(set.pause) : null, exerciseId: set.exerciseId, weightKg: weightToKg(Number(set.weight), units.weight), reps: set.reps.trim() ? Number(set.reps) : 0, jumpHeightCm: kind === "jump" && (set.category || jumpCategory(set.exerciseId)) !== "broad" && set.height.trim() ? heightToCm(Number(set.height), units.height) : null, splitTimeSeconds: kind === "sprint" && set.time.trim() ? Number(set.time) : null, rpe: set.rpe };
+        return { test: kind === "strength" ? null : { jumpCategory: set.category || jumpCategory(set.exerciseId), approach: set.approach, leg: set.leg, broadJumpCm: kind === "jump" && (set.category || jumpCategory(set.exerciseId)) === "broad" && set.broad.trim() ? heightToCm(parseFormNumber(set.broad, `Set ${index + 1} Broad jump distance`, 0)!, units.height) : null, distanceM: kind === "sprint" && set.distance.trim() ? parseFormNumber(set.distance, `Set ${index + 1} Sprint distance`, 0)! : null, splits: kind === "sprint" && set.splitsText.trim() ? parseSprintSplits(set.splitsText) : [], protocol: set.protocol }, videoUrl: set.videoUrl.trim() || null, setType: set.setType, superset: set.superset.trim() || null, dropGroup: set.dropGroup.trim() || null, tempo: set.tempo.trim() || null, pauseSeconds: set.pause.trim() ? parseFormNumber(set.pause, `Set ${index + 1} Pause duration`, 0)! : null, exerciseId: set.exerciseId, weightKg: weightToKg(parseFormNumber(set.weight, `Set ${index + 1} Weight`, 0)!, units.weight), reps: set.reps.trim() ? parseFormNumber(set.reps, `Set ${index + 1} Reps`, 0)! : 0, jumpHeightCm: kind === "jump" && (set.category || jumpCategory(set.exerciseId)) !== "broad" && set.height.trim() ? heightToCm(parseFormNumber(set.height, `Set ${index + 1} Jump height`, 0)!, units.height) : null, splitTimeSeconds: kind === "sprint" && set.time.trim() ? parseFormNumber(set.time, `Set ${index + 1} Sprint time`, 0)! : null, rpe: set.rpe };
       }),
     };
   }

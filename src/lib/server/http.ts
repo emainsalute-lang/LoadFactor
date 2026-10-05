@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { formIssueMessage } from "../form-numbers";
 import { ServiceError, store } from "./store";
 export const COOKIE = "loadfactor-auth";
 export async function currentUser() {
@@ -23,7 +24,7 @@ export async function handle(request: Request, action: () => Promise<Response> |
     }
     const response = await action(); response.headers.set("Cache-Control", "no-store"); return response;
   } catch (error) {
-    if (error instanceof z.ZodError) return NextResponse.json({ error: error.issues[0]?.message ?? "Invalid input." }, { status: 422 });
+    if (error instanceof z.ZodError) return NextResponse.json({ error: formIssueMessage(error.issues[0]) }, { status: 422 });
     if (error instanceof ServiceError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("LoadFactor request failed:", error instanceof Error ? error.message : "Unknown error");
     return NextResponse.json({ error: "The server could not complete this request. Your draft is still available." }, { status: 500 });
