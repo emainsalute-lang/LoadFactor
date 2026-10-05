@@ -34,15 +34,15 @@ interface Data { sessions: WorkoutSession[]; metrics: PerformanceMetric[] }
 const STORAGE_KEY = "loadfactor-sessions-v1";
 const number = (value: number) => value.toLocaleString("en-US", { maximumFractionDigits: 0 });
 const sections = [
-  { id: "overview", label: "Overview", description: "A clear view of your performance, one session at a time.", icon: LayoutDashboard },
-  { id: "logger", label: "Session logger", description: "Record the details of today's training.", icon: Dumbbell },
+  { id: "overview", label: "Home", description: "Record a workout, plan your week, or check your progress.", icon: LayoutDashboard },
+  { id: "logger", label: "Log workout", description: "Name your workout, add your sets, then save your session.", icon: Dumbbell },
   { id: "history", label: "Training history", description: "Review, compare, and export your training sessions.", icon: Activity },
   { id: "coaching", label: "Coaches & teams", description: "Manage coaching connections, teams, and shared progress.", icon: Activity },
   { id: "wellness", label: "Wellness", description: "Track daily wellness and training load.", icon: Activity },
   { id: "planning", label: "Schedule & goals", description: "Plan training blocks, scheduled sessions, and goals.", icon: Activity },
   { id: "tests", label: "Jump & sprint", description: "Review measured jump and sprint performance.", icon: Zap },
   { id: "strength", label: "Strength", description: "Explore strength trends, records, and exercise settings.", icon: Dumbbell },
-  { id: "settings", label: "Preferences", description: "Manage your account, data, and display preferences.", icon: Settings2 },
+  { id: "settings", label: "Settings", description: "Manage your account, data, and display preferences.", icon: Settings2 },
 ] as const;
 type SectionId = (typeof sections)[number]["id"];
 export type DashboardSection = SectionId;
@@ -254,7 +254,14 @@ export default function Dashboard({ initialData, today: initialToday, account, i
       <Link href="/overview" className="brand" onClick={event => { event.preventDefault(); navigate("overview"); }}><BrandMark/>loadfactor<span className="brand-period">.</span></Link>
       <div className="workspace-label"><span className="status-dot"/>ATHLETE WORKSPACE</div>
       <nav aria-label="Main navigation">
-        {sections.map(item => <a key={item.id} href={"/" + item.id} aria-current={active === item.id ? "page" : undefined} className={"nav-item " + (active === item.id ? "active" : "")} onClick={event => { event.preventDefault(); navigate(item.id); }}><item.icon size={18}/><span>{item.label}</span>{active === item.id && <ChevronRight size={14}/>}</a>)}
+        {[
+          { label: "Your training", ids: ["overview", "logger", "planning", "history", "wellness"] },
+          { label: "Your progress", ids: ["strength", "tests"] },
+          { label: "Your workspace", ids: ["coaching", "settings"] },
+        ].map(group => <div className="nav-group" key={group.label}><span className="nav-group-label">{group.label}</span>{group.ids.map(id => {
+          const item = sections.find(item => item.id === id)!;
+          return <a key={item.id} href={"/" + item.id} aria-current={active === item.id ? "page" : undefined} className={"nav-item " + (active === item.id ? "active" : "")} onClick={event => { event.preventDefault(); navigate(item.id); }}><item.icon size={18}/><span>{item.label}</span>{active === item.id && <ChevronRight size={14}/>}</a>;
+        })}</div>)}
       </nav>
       <div className="sidebar-note"><span className="tiny-label">THE LONG GAME</span><TrendingUp size={25}/><h3>Small gains.<br/>Big difference.</h3><p>Show up. Track the work.<br/>Trust your progress.</p><span className="note-line"/></div>
       <div className="profile"><span className="avatar">{firebaseUser?.displayName?.split(" ").map(n => n[0]).slice(0, 2).join("") || account?.name.split(" ").map(n => n[0]).slice(0, 2).join("") || "AM"}</span><div><strong>{firebaseUser?.displayName || account?.name || demoUser.name}</strong><span>{firebaseUser?.email ?? account?.sport ?? "Field & court athlete"}</span></div>{firebaseUser ? <button className="text-button" type="button" aria-label="Sign out" onClick={() => void signOut(firebaseAuth)}>Sign out</button> : <span className="status-dot"/>}</div>
@@ -266,6 +273,14 @@ export default function Dashboard({ initialData, today: initialToday, account, i
         {offlineQueue.length > 0 && <section className="panel p-4 mb-4" aria-label="Offline sync queue"><strong>{offlineQueue.filter(item => item.state === "pending").length} session(s) waiting to sync</strong>{offlineQueue.filter(item => item.state === "conflict" && item.serverRecord).map(item => <div className="template-item" key={item.clientId}><span>Conflict: “{item.session.title}” shares an ID with a server workout.</span><button className="text-button" type="button" onClick={() => void resolveOfflineConflict(item, "server")}>Keep server version</button><button className="text-button" type="button" onClick={() => void resolveOfflineConflict(item, "local")}>Replace with offline version</button></div>)}</section>}
         {storageError && <p className="error-message" role="alert">{storageError}</p>}
         {active === "overview" && <>
+        {!account && <div className="demo-notice"><span className="demo-badge">DEMO WORKSPACE</span><p>Explore sample workouts. Workouts you add are saved in this browser.</p><button type="button" className="text-button" onClick={() => navigate("settings")}>Account options</button></div>}
+        <section className="quick-actions" aria-label="Start here">
+          {[
+            { id: "logger" as const, icon: Dumbbell, title: "Record a workout", text: "Add your exercises and sets.", action: "Start logging" },
+            { id: "planning" as const, icon: Activity, title: "Plan your week", text: "Schedule workouts and set a goal.", action: "Open schedule" },
+            { id: "wellness" as const, icon: Gauge, title: "How are you feeling?", text: "Check in on sleep, energy and recovery.", action: "Daily check-in" },
+          ].map(item => <button type="button" className="quick-action" key={item.id} onClick={() => navigate(item.id)}><span className="quick-action-icon"><item.icon size={22}/></span><strong>{item.title}</strong><span>{item.text}</span><span className="quick-action-link">{item.action}<ChevronRight size={16}/></span></button>)}
+        </section>
         <div className="overview-toolbar"><div className="flex items-center gap-2"><span className="status-dot"/><span>Performance snapshot</span><span className="demo-badge">{account ? "ACCOUNT DATA" : firebaseUser ? "BROWSER DATA" : "DEMO DATA"}</span></div><span>{parseDate(today).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}</span></div>
         <div className="metric-grid">
           <Metric title="Vertical jump PR" icon={<MoveUpRight size={19}/>} value={summary.verticalPr === null ? "—" : heightFromCm(summary.verticalPr, heightUnit).toFixed(1)} unit={heightUnit} foot="All-time personal best" color="lime" badge={<><ArrowUpRight size={13}/>Explosive power</>}/>
