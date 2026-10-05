@@ -11,8 +11,9 @@ export function rebuildRecord(value: unknown): SessionSubmission | null {
   const result = createSession(parsed.data);
   const sessionId = session.id;
   result.session.id = sessionId;
+  if ("userId" in session && typeof session.userId === "string") result.session.userId = session.userId;
   if ("createdAt" in session && typeof session.createdAt === "string") result.session.createdAt = session.createdAt;
-  result.metrics = result.metrics.map(metric => ({ ...metric, sessionId }));
+  result.metrics = result.metrics.map(metric => ({ ...metric, sessionId, userId: result.session.userId }));
   return result;
 }
 export const catalogSchema = z.array(customExerciseSchema).max(100);

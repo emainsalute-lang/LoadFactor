@@ -50,6 +50,9 @@ export function sessionTotals(session: WorkoutSession) {
 }
 export function monthlySummary(sessions: WorkoutSession[], month: string) {
   monthSchema.parse(month); const matching = sessions.filter(s => s.date.startsWith(month + "-"));
-  const sets = matching.flatMap(s => s.exercises);
-  return { sessions: matching.length, trainingDays: new Set(matching.map(s => s.date)).size, sets: sets.length, volumeKg: sets.reduce((sum, s) => sum + s.weightKg * s.reps, 0), averageRpe: sets.length ? sets.reduce((sum, s) => sum + s.rpe, 0) / sets.length : null };
+  return historySummary(matching);
+}
+export function historySummary(sessions: WorkoutSession[]) {
+  const sets = sessions.flatMap(session => session.exercises);
+  return { sessions: sessions.length, trainingDays: new Set(sessions.map(session => session.date)).size, sets: sets.length, volumeKg: sets.reduce((sum, set) => sum + set.weightKg * set.reps, 0), averageRpe: sets.length ? sets.reduce((sum, set) => sum + set.rpe, 0) / sets.length : null };
 }

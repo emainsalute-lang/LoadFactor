@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { emptyFilter, filterHistory, historyFilterSchema, monthDays, monthlySummary, savedFiltersSchema, sessionTotals, shiftMonth } from "./history";
+import { emptyFilter, filterHistory, historyFilterSchema, historySummary, monthDays, monthlySummary, savedFiltersSchema, sessionTotals, shiftMonth } from "./history";
 import { sessionInputSchema } from "./validation";
 import { createSession } from "./sessions";
 const set = { exerciseId: "trap-bar-deadlift", weightKg: 100, reps: 5, jumpHeightCm: null, splitTimeSeconds: null, rpe: 8 };
 function session(title: string, date: string, tags: string[] = [], sets = [set], notes = "") { return createSession(sessionInputSchema.parse({ title, date, tags, notes, exercises: sets })).session; }
 describe("training history", () => {
+  it("reports exactly the filtered sessions using recorded sets rather than stored totals", () => {
+    const a = session("Speed strength", "2026-09-28", ["speed"], [set, { ...set, weightKg: 50, reps: 4, rpe: 6 }]);
+    const b = session("Evening", "2026-09-28", ["speed"], [{ ...set, weightKg: 0, reps: 10, rpe: 4 }]);
+    const other = session("Other", "2026-08-31");
+    a.volumeKg = 9999;
+    const visible = filterHistory([a, b, other], { ...emptyFilter, tag: "speed" });
+    expect(historySummary(visible)).toEqual({ sessions: 2, trainingDays: 1, sets: 3, volumeKg: 700, averageRpe: 6 });
+    expect(historySummary([])).toEqual({ sessions: 0, trainingDays: 0, sets: 0, volumeKg: 0, averageRpe: null });
+  });
   it("combines title/notes search, exercise, category, tags, and inclusive dates", () => {
     const a = session("Lower body", "2026-09-28", ["power"], [set], "Great acceleration work");
     const b = session("Upper body", "2026-09-29", ["power"]);

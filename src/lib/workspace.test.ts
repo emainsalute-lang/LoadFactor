@@ -6,9 +6,11 @@ describe("workspace records", () => {
   it("restores edited records and recalculates totals rather than trusting stored metrics", () => {
     const result = createSession(sessionInputSchema.parse({ title: "Edited", date: "2026-09-28", exercises: [{ exerciseId: "trap-bar-deadlift", weightKg: 100, reps: 3, jumpHeightCm: null, splitTimeSeconds: null, rpe: 7 }] }));
     result.session.volumeKg = 999;
+    result.session.userId = "firebase-athlete";
     const restored = rebuildRecord(result)!;
     expect(restored.session.id).toBe(result.session.id);
     expect(restored.session.createdAt).toBe(result.session.createdAt);
+    expect(restored.session.userId).toBe("firebase-athlete");
     expect(restored.session.volumeKg).toBe(300);
     expect(rebuildRecord({ session: { id: "invalid" } })).toBeNull();
   });

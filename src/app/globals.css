@@ -475,3 +475,63 @@ footer { font-size: 12px; }
 @media(max-width:1050px) { .product-hero { gap: 30px; } .preview-sidebar { display: none; } .preview-dashboard-body { grid-template-columns: 1fr; } .product-feature-row { gap: 40px; } .product-feature-visual { padding: 24px; } .product-account { gap: 36px; padding: 36px; } }
 @media(max-width:760px) { .product-header { padding: 20px; gap: 14px; flex-wrap: wrap; } .product-header .landing-brand { font-size: 22px; } .product-header nav { order: 3; width: 100%; justify-content: center; } .product-header-actions { gap: 12px; } .product-header-actions .primary-button { padding: 10px 12px; } .product-main { padding: 0 20px; } .product-hero { grid-template-columns: 1fr; padding: 50px 0 60px; gap: 24px; } .product-hero h1 { font-size: 42px; } .product-hero-copy > p { font-size: 16px; } .product-hero-visual { padding: 12px 4px; } .product-dashboard { transform: none; } .product-hero-visual::before { inset: -15px 0; } .product-capabilities { justify-content: flex-start; gap: 20px; } .product-features { padding-top: 60px; } .product-feature-row { grid-template-columns: 1fr; gap: 28px; margin-bottom: 60px; } .product-feature-copy { order: -1; } .product-feature-reverse .product-feature-visual { order: 0; } .product-feature-copy h3 { font-size: 29px; } .product-section-heading { margin-bottom: 36px; } .product-step-grid { grid-template-columns: 1fr; gap: 16px; } .product-steps { padding-bottom: 60px; } .product-account { grid-template-columns: 1fr; padding: 26px 20px; gap: 28px; } .product-footer { padding: 24px 20px; flex-wrap: wrap; } .product-floating-note { margin: -5px 12px -10px; } }
 @media(max-width:380px) { .product-header-actions .text-button { font-size: 12px; } .product-hero h1 { font-size: 36px; } .preview-dashboard-content { padding: 14px; } .preview-stats { gap: 6px; } .preview-stats > div { padding: 8px; } .preview-heading strong { font-size: 14px; } .product-feature-visual { padding: 18px; } .phone-side-note { right: -5px; width: 150px; } .product-progress-preview { padding: 16px; } }
+/* Saved sessions and history reports */
+.history-search-options { margin: 20px 0; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; }
+.history-search-options > summary { font-size: 14px; font-weight: 500; }
+.history-report { margin: 24px 0; padding: 22px; background: #faf9f5; border: 1px solid var(--border); border-radius: 12px; }
+.history-report .section-title { align-items: flex-start; margin-bottom: 18px; }
+.history-report .account-description { margin: 8px 0; }
+.history-report .results-metrics { margin-bottom: 0; }
+.history-report .results-metrics dd { font-size: 26px; }
+.history-report-details { margin-top: 18px; }
+.history-report-details > summary { font-size: 14px; }
+.history-report-chart { height: 260px; margin-top: 20px; }
+.saved-session-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 18px; }
+.saved-session-card { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.saved-session-card:has(.saved-session-open:hover), .saved-session-card:focus-within { border-color: #b28a17; box-shadow: 0 4px 18px #493b000c; }
+.saved-session-open { display: block; flex: 1; padding: 22px; }
+.saved-session-date { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+.saved-session-date > svg:last-child { margin-left: auto; color: #806000; }
+.saved-session-open h3 { font-size: 21px; line-height: 1.4; margin: 14px 0 10px; overflow-wrap: anywhere; }
+.saved-session-exercises { display: flex; align-items: flex-start; gap: 8px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.saved-session-exercises > svg { flex-shrink: 0; margin-top: 4px; }
+.saved-session-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
+.saved-session-stats dt { font-size: 12px; color: var(--muted); }
+.saved-session-stats dd { font-size: 21px; font-weight: 600; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.saved-session-note { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 13px; color: var(--muted); margin-bottom: 16px; white-space: pre-wrap; }
+.saved-session-view { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #806000; }
+.saved-session-card > .tag-list { padding: 0 22px 16px; }
+.saved-session-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; padding: 12px 22px; border-top: 1px solid var(--border); background: #faf9f5; }
+.saved-session-actions > label { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-right: auto; }
+.saved-session-actions input { min-height: 0; margin: 0; }
+.history-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; padding: 32px; border: 1px dashed var(--border); border-radius: 12px; }
+.history-empty > svg { color: #806000; }
+.history-empty > p { color: var(--muted); }
+@media(max-width:650px) { .history-report { padding: 16px; } .history-report .section-title { flex-wrap: wrap; } .saved-session-open { padding: 18px; } }
+@media print { .history-report { padding: 0; border: 0; } .history-report .results-metrics { grid-template-columns: repeat(5, 1fr); } .history-report-chart { height: 200px; } }
+.athlete-panel { padding: 24px; margin-bottom: 20px; }
+@media (min-width: 651px) { .sidebar > nav { overflow-y: auto; min-height: 0; flex: 1; } }
+.athlete-panel h2 { margin-bottom: 10px; }
+.athlete-panel h3 { margin: 20px 0 8px; font-size: 18px; }
+.athlete-panel p { margin: 10px 0; color: #57534e; }
+.athlete-panel a { text-decoration: underline; text-underline-offset: 3px; }
+.athlete-panel a.primary-button { text-decoration: none; display: inline-flex; }
+.athlete-panel fieldset { min-width: 0; }
+.athlete-stats { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 12px; margin: 20px 0; }
+.athlete-stat { border: 1px solid #e7e5e4; background: #fafaf9; border-radius: 12px; padding: 16px; }
+.athlete-stat span { display: block; color: #57534e; font-size: 13px; }
+.athlete-stat strong { display: block; margin-top: 8px; font-size: 21px; line-height: 1.4; }
+.athlete-chart { height: 250px; width: 100%; min-width: 0; margin: 20px 0; }
+.athlete-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.athlete-columns > * { min-width: 0; }
+.athlete-record { padding: 14px 0; border-top: 1px solid #e7e5e4; }
+.athlete-record span { display: block; margin-top: 4px; color: #57534e; }
+.readiness-result { background: #fafaf9; border-radius: 12px; padding: 20px; margin-top: 20px; }
+.readiness-status { font-size: 22px; }
+.readiness-4,.readiness-5 { color: #166534; }
+.readiness-3 { color: #854d0e; }
+.readiness-2 { color: #9a3412; }
+.readiness-0,.readiness-1 { color: #991b1b; }
+.readiness-factor { display: block; margin-top: 12px; }
+.readiness-factor progress { display: block; width: 100%; accent-color: #ca9a00; }
+@media (max-width: 700px) { .athlete-columns { grid-template-columns: 1fr; gap: 0; } .athlete-panel { padding: 18px; } .athlete-chart { height: 220px; } }

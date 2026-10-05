@@ -23,7 +23,7 @@ export function FirebaseWorkspaceGate({ children }: { children: ReactNode }) {
     router.replace("/");
   }), [router]);
   if (!ready || !user) return <main className="auth-loading" role="status">Checking your sign-in…</main>;
-  return <FirebaseUserContext.Provider value={user}>{children}</FirebaseUserContext.Provider>;
+  return <FirebaseUserContext.Provider key={user.uid} value={user}>{children}</FirebaseUserContext.Provider>;
 }
 
 export default function FirebaseLanding() {

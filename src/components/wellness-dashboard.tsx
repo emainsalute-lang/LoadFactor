@@ -7,6 +7,7 @@ import { bodyweightHistory, wellnessComparison, wellnessHistorySchema, wellnessS
 import { performanceTests } from "@/lib/tests-analysis";
 import { strengthCatalog } from "@/lib/strength";
 import { muscleGroups, type HeightUnit, type WeightUnit, type WorkoutSession } from "@/lib/types";
+import { useFirebaseUser } from "./firebase-auth";
 
 function blank(date: string): WellnessCheckIn {
   return { date, sleepHours: null, sleepQuality: null, soreness: null, stress: null, mood: null, bodyweightKg: null, muscleSoreness: {}, notes: "" };
@@ -22,6 +23,8 @@ export default function WellnessDashboard({ checkIns, onCheckIns, sessions, toda
   checkIns: WellnessCheckIn[]; onCheckIns: (values: WellnessCheckIn[]) => void; sessions: WorkoutSession[];
   today: string; accountId?: string; weightUnit: WeightUnit; heightUnit: HeightUnit;
 }) {
+  const firebaseUser = useFirebaseUser();
+  const storageKey = "loadfactor-wellness-v1" + (firebaseUser ? ":firebase:" + firebaseUser.uid : "");
   const [form, setForm] = useState<WellnessCheckIn>(() => checkIns.find(c => c.date === today) ?? blank(today));
   const [ready, setReady] = useState(!!accountId);
   const [busy, setBusy] = useState(false);
@@ -38,14 +41,14 @@ export default function WellnessDashboard({ checkIns, onCheckIns, sessions, toda
     const frame = requestAnimationFrame(() => {
       if (!accountId) {
         try {
-          const raw = localStorage.getItem("loadfactor-wellness-v1");
+          const raw = localStorage.getItem(storageKey);
           if (raw) { const saved = wellnessHistorySchema.parse(JSON.parse(raw)); onCheckIns(saved); setForm(saved.find(c => c.date === today) ?? blank(today)); }
         } catch { setError("Saved wellness data could not be read. Export available data before changing check-ins."); }
       }
       setReady(true);
     });
     return () => cancelAnimationFrame(frame);
-  }, [accountId, onCheckIns, today]);
+  }, [accountId, onCheckIns, today, storageKey]);
   function chooseDate(date: string) { setForm(checkIns.find(c => c.date === date) ?? blank(date)); setError(""); setNotice(""); }
   async function submit(event: FormEvent) {
     event.preventDefault(); if (busy) return;
@@ -55,7 +58,7 @@ export default function WellnessDashboard({ checkIns, onCheckIns, sessions, toda
     try {
       const next = wellnessHistorySchema.parse([...checkIns.filter(c => c.date !== form.date), parsed.data].sort((a, b) => a.date.localeCompare(b.date)));
       const result = accountId ? (await api<{ wellness: WellnessCheckIn[] }>("/api/account/wellness", "PUT", parsed.data)).wellness : next;
-      if (!accountId) localStorage.setItem("loadfactor-wellness-v1", JSON.stringify(result));
+      if (!accountId) localStorage.setItem(storageKey, JSON.stringify(result));
       onCheckIns(result); setForm(parsed.data); setNotice("Daily check-in saved.");
     } catch (e) { setError(e instanceof Error ? e.message : "Could not save the check-in."); } finally { setBusy(false); }
   }
@@ -63,7 +66,7 @@ export default function WellnessDashboard({ checkIns, onCheckIns, sessions, toda
     if (busy) return; setBusy(true); setError(""); setNotice("");
     try {
       const result = accountId ? (await api<{ wellness: WellnessCheckIn[] }>("/api/account/wellness", "DELETE", { date: form.date })).wellness : checkIns.filter(c => c.date !== form.date);
-      if (!accountId) localStorage.setItem("loadfactor-wellness-v1", JSON.stringify(result));
+      if (!accountId) localStorage.setItem(storageKey, JSON.stringify(result));
       onCheckIns(result); setForm(blank(form.date)); setNotice("Check-in removed.");
     } catch (e) { setError(e instanceof Error ? e.message : "Could not remove the check-in."); } finally { setBusy(false); }
   }
