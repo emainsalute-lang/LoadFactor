@@ -3,11 +3,13 @@ import { sprintSegments, testIdentity } from "@/lib/tests-analysis";
 import { sessionCatalog, sessionTotals } from "@/lib/history";
 import type { HeightUnit, WeightUnit, WorkoutSession } from "@/lib/types";
 import SessionFeedback from "./session-feedback";
+import VideoReportLinks from "./video-report-links";
 import WorkoutResults from "./workout-results";
 export default function SessionDetail({ session, weightUnit, heightUnit, feedbackRole = "athlete", feedbackEnabled = true }: { session: WorkoutSession; weightUnit: WeightUnit; heightUnit: HeightUnit; feedbackRole?: "athlete" | "coach"; feedbackEnabled?: boolean }) {
   const totals = sessionTotals(session), catalog = sessionCatalog(session);
   return <article className="session-detail">
     <WorkoutResults session={session} weightUnit={weightUnit} heightUnit={heightUnit}/>
+    <VideoReportLinks sessionId={session.id}/>
     <h2>{session.title}</h2><p className="account-description">{parseDate(session.date).toLocaleDateString("en-US", { dateStyle: "long" })}</p>
     {session.plannedWorkoutId && <p className="account-description">Linked to a scheduled workout. View the schedule for target comparison.</p>}
     <div className="tag-list">{(session.tags ?? []).map(tag => <span className="session-tag" key={tag}>{tag}</span>)}</div>

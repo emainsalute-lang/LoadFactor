@@ -3,7 +3,7 @@ import { WorkspacePage } from "../workspace-page";
 import { FirebaseWorkspaceGate } from "@/components/firebase-auth";
 import type { DashboardSection } from "@/components/dashboard";
 
-const sections: DashboardSection[] = ["overview", "logger", "history", "coaching", "wellness", "recovery", "workout-plan", "planning", "tests", "strength", "settings"];
+const sections: DashboardSection[] = ["overview", "logger", "history", "coaching", "wellness", "recovery", "video-analysis", "workout-plan", "planning", "tests", "strength", "settings"];
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
