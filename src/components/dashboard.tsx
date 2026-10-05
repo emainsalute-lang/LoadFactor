@@ -14,6 +14,7 @@ import AccountPanel from "./account-panel";
 import TrainingHistory from "./training-history";
 import TestAnalysis from "./test-analysis";
 import TrainingPlanner from "./training-planner";
+import WorkoutDocumentPage from "./workout-document";
 import WellnessDashboard from "./wellness-dashboard";
 import type { WellnessCheckIn } from "@/lib/wellness";
 import { emptyPlanning, type PlannedWorkout, type Planning } from "@/lib/planning";
@@ -40,6 +41,7 @@ const sections = [
   { id: "history", label: "Training history", description: "Review, compare, and export your training sessions.", icon: Activity },
   { id: "coaching", label: "Coaches & teams", description: "Manage coaching connections, teams, and shared progress.", icon: Activity },
   { id: "wellness", label: "Wellness", description: "Track daily wellness and training load.", icon: Activity },
+  { id: "workout-plan", label: "Daily workout", description: "Design your daily workout as a document, then save it to your schedule.", icon: Dumbbell },
   { id: "planning", label: "Schedule & goals", description: "Plan training blocks, scheduled sessions, and goals.", icon: Activity },
   { id: "tests", label: "Jump & sprint", description: "Review measured jump and sprint performance.", icon: Zap },
   { id: "strength", label: "Strength", description: "Explore strength trends, records, and exercise settings.", icon: Dumbbell },
@@ -259,7 +261,7 @@ export default function Dashboard({ initialData, today: initialToday, account, i
       <div className="workspace-label"><span className="status-dot"/>ATHLETE WORKSPACE</div>
       <nav aria-label="Main navigation">
         {[
-          { label: "Your training", ids: ["overview", "logger", "planning", "history", "wellness"] },
+          { label: "Your training", ids: ["overview", "logger", "workout-plan", "planning", "history", "wellness"] },
           { label: "Your progress", ids: ["strength", "tests"] },
           { label: "Your workspace", ids: ["coaching", "settings"] },
         ].map(group => <div className="nav-group" key={group.label}><span className="nav-group-label">{group.label}</span>{group.ids.map(id => {
@@ -300,6 +302,7 @@ export default function Dashboard({ initialData, today: initialToday, account, i
         </>}
         {active === "tests" && <TestAnalysis sessions={data.sessions} heightUnit={heightUnit}/>}
         {active === "wellness" && <WellnessDashboard checkIns={wellness} onCheckIns={updateWellness} sessions={data.sessions} today={today} accountId={account?.id} weightUnit={weightUnit} heightUnit={heightUnit}/>}
+        {active === "workout-plan" && <WorkoutDocumentPage planning={planning} onPlanning={updatePlanning} today={today} accountId={account?.id}/>}
         {active === "planning" && <TrainingPlanner planning={planning} onPlanning={updatePlanning} sessions={data.sessions} today={today} accountId={account?.id} timezone={account?.timezone} templates={initialWorkspace?.templates ?? []} weightUnit={weightUnit} onStart={startPlanned} onLink={linkPlanned}/>}
         {active === "strength" && <StrengthDashboard sessions={data.sessions} custom={initialWorkspace?.custom ?? []} today={today} weightUnit={weightUnit} accountId={account?.id} settings={strengthSettings} onSettings={setStrengthSettings}/>}
         {active === "coaching" && <CoachingPanel account={account} today={today} weightUnit={weightUnit} heightUnit={heightUnit} planning={planning}/>}

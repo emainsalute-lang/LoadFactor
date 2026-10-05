@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useFirebaseUser } from "./firebase-auth";
 import { weekStart, weightFromKg, weightToKg } from "@/lib/analytics";
 import { api } from "@/lib/client-api";
 import { historyCatalog } from "@/lib/history";
@@ -13,6 +15,8 @@ export default function TrainingPlanner({ planning, onPlanning, sessions, today,
   accountId?: string; timezone?: string; templates: WorkoutTemplate[]; weightUnit: WeightUnit;
   onStart: (plan: PlannedWorkout) => void; onLink: (session: WorkoutSession, planId: string | null) => Promise<void>;
 }) {
+  const firebaseUser = useFirebaseUser();
+  const storageSuffix = firebaseUser ? ":firebase:" + firebaseUser.uid : "";
   const [templates, setTemplates] = useState(initialTemplates);
   const [templateId, setTemplateId] = useState("");
   const [date, setDate] = useState(today);
@@ -47,12 +51,12 @@ export default function TrainingPlanner({ planning, onPlanning, sessions, today,
       if (accountId) {
         void api<{ templates: WorkoutTemplate[] }>("/api/account/workspace").then(value => { if (!stopped) setTemplates(templatesSchema.parse(value.templates)); }).catch(() => {});
       } else {
-        try { const raw = localStorage.getItem("loadfactor-templates-v1"); if (raw) setTemplates(templatesSchema.parse(JSON.parse(raw))); } catch { setError("Saved templates could not be read."); }
+        try { const raw = localStorage.getItem("loadfactor-templates-v1" + storageSuffix); if (raw) setTemplates(templatesSchema.parse(JSON.parse(raw))); } catch { setError("Saved templates could not be read."); }
       }
     }
     const frame = requestAnimationFrame(() => {
       if (!accountId) {
-        try { const raw = localStorage.getItem("loadfactor-planning-v1"); if (raw) onPlanning(planningSchema.parse(JSON.parse(raw))); } catch { setError("Saved planning data could not be read. Export available data before changing plans."); }
+        try { const raw = localStorage.getItem("loadfactor-planning-v1" + storageSuffix); if (raw) onPlanning(planningSchema.parse(JSON.parse(raw))); } catch { setError("Saved planning data could not be read. Export available data before changing plans."); }
       }
       try {
         const key = `loadfactor-reminders:${accountId ?? "guest"}`;
@@ -63,7 +67,7 @@ export default function TrainingPlanner({ planning, onPlanning, sessions, today,
     });
     window.addEventListener("focus", load); window.addEventListener("loadfactor-assets", load);
     return () => { stopped = true; cancelAnimationFrame(frame); window.removeEventListener("focus", load); window.removeEventListener("loadfactor-assets", load); };
-  }, [accountId, onPlanning]);
+  }, [accountId, onPlanning, storageSuffix]);
   useEffect(() => {
     if (!remindersEnabled || !("Notification" in window) || Notification.permission !== "granted") return;
     function checkReminder() {
@@ -106,7 +110,7 @@ export default function TrainingPlanner({ planning, onPlanning, sessions, today,
     catch { setError("Reminder time could not be saved."); }
   }
   function exportCalendar() {
-    const text = trainingCalendar(planning.plans);
+    const text = trainingCalendar(planning.plans, planning.documents);
     const url = URL.createObjectURL(new Blob([text], { type: "text/calendar;charset=utf-8" }));
     const link = document.createElement("a"); link.href = url; link.download = "loadfactor-training.ics"; link.click(); URL.revokeObjectURL(url);
   }
@@ -118,7 +122,7 @@ export default function TrainingPlanner({ planning, onPlanning, sessions, today,
     setBusy(true);
     try {
       const result = accountId ? (await api<{ planning: Planning }>("/api/account/planning", "PUT", parsed.data)).planning : parsed.data;
-      if (!accountId) localStorage.setItem("loadfactor-planning-v1", JSON.stringify(result));
+      if (!accountId) localStorage.setItem("loadfactor-planning-v1" + storageSuffix, JSON.stringify(result));
       onPlanning(result); setNotice(accountId ? "Plan saved to your account." : "Plan saved to this browser."); return true;
     } catch (e) { setError(e instanceof Error ? e.message : "Planning save failed."); return false; }
     finally { setBusy(false); }
@@ -172,9 +176,10 @@ export default function TrainingPlanner({ planning, onPlanning, sessions, today,
         <label className="field-label">Weekly increase ({mode === "load" ? weightUnit : "reps"})<input type="number" min="0" max="100" step={mode === "reps" ? "1" : "any"} required value={increment} onChange={e => setIncrement(Number(e.target.value))}/></label>
         <label className="field-label">Deload every N weeks (0 disables)<input type="number" min="0" max="52" value={deloadEvery} required onChange={e => setDeloadEvery(Number(e.target.value))}/></label><label className="field-label">Deload load reduction (%)<input type="number" min="0" max="90" step="any" required value={deloadPercent} onChange={e => setDeloadPercent(Number(e.target.value))}/></label>
       </div><div className="phase-controls">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, i) => <label key={day}><input type="checkbox" checked={days.includes(i)} onChange={e => setDays(current => e.target.checked ? [...current, i] : current.filter(d => d !== i))}/> {day}</label>)}</div><p className="account-description">Uses the selected template and start date. Progression applies by week, pauses during deloads, and adjusts strength sets only. Deloads reduce strength load. Review generated targets before training.</p><button className="primary-button" disabled={!template}>Create block</button></form></details>
-      <h3>Weekly schedule</h3><div className="phase-controls"><button type="button" className="text-button" onClick={() => setWeek(shiftDate(week, -7))}>Previous week</button><label className="field-label">Week containing<input type="date" required value={week} onChange={e => { if (e.target.value) setWeek(weekStart(e.target.value)); }}/></label><button type="button" className="text-button" onClick={() => setWeek(shiftDate(week, 7))}>Next week</button></div>
-      <div className="history-filters">{Array.from({ length: 7 }, (_, i) => { const date = shiftDate(week, i); return <div className="set-row" key={date}><strong>{date}</strong><p>{planning.plans.filter(p => p.date === date).length} workouts</p></div>; })}</div>
-      {weekPlans.map(planCard)}{!weekPlans.length && <p>No workouts scheduled this week.</p>}
+      <div className="phase-controls"><h3>Weekly schedule</h3><Link className="primary-button" href="/workout-plan">Design a daily workout</Link></div><div className="phase-controls"><button type="button" className="text-button" onClick={() => setWeek(shiftDate(week, -7))}>Previous week</button><label className="field-label">Week containing<input type="date" required value={week} onChange={e => { if (e.target.value) setWeek(weekStart(e.target.value)); }}/></label><button type="button" className="text-button" onClick={() => setWeek(shiftDate(week, 7))}>Next week</button></div>
+      <div className="history-filters">{Array.from({ length: 7 }, (_, i) => { const date = shiftDate(week, i); return <div className="set-row" key={date}><strong>{date}</strong><p>{planning.plans.filter(p => p.date === date).length + planning.documents.filter(doc => doc.date === date).length} workouts</p></div>; })}</div>
+      {planning.documents.filter(doc => doc.date >= week && doc.date <= shiftDate(week, 6)).map(doc => <article className="set-row" key={doc.id}><h3>{doc.date} / {doc.title}</h3><p className="account-description">Daily workout document ? {doc.rows.length} exercises ? Planned</p><p className="session-notes">{doc.objective}</p><Link className="secondary-button" href={"/workout-plan?date=" + doc.date + "&document=" + doc.id}>Open workout document</Link></article>)}
+      {weekPlans.map(planCard)}{!weekPlans.length && !planning.documents.some(doc => doc.date >= week && doc.date <= shiftDate(week, 6)) && <p>No workouts scheduled this week.</p>}
       <details><summary>Missed workouts ({missed.length})</summary>{missed.map(planCard)}</details>
       <details><summary>Training blocks ({planning.blocks.length})</summary>{planning.blocks.map(block => <p key={block.id}>{block.name} / {block.start} / {block.weeks} weeks / {planning.plans.filter(p => p.blockId === block.id).length} scheduled workouts</p>)}</details>
       {editing && <form onSubmit={async e => { e.preventDefault(); if (await save({ ...planning, plans: planning.plans.map(p => p.id === editing.id ? editing : p) })) setEditing(null); }}><h3>Edit workout targets</h3><div className="history-filters"><label className="field-label">Scheduled date<input type="date" required value={editing.date} onChange={e => setEditing({ ...editing, date: e.target.value, input: { ...editing.input, date: e.target.value } })}/></label><label className="field-label">Workout title<input required maxLength={80} value={editing.input.title} onChange={e => setEditing({ ...editing, input: { ...editing.input, title: e.target.value } })}/></label><label><input type="checkbox" checked={editing.deload} onChange={e => setEditing({ ...editing, deload: e.target.checked })}/> Deload workout</label></div>

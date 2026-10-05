@@ -24,19 +24,31 @@ export const goalSchema = z.object({
 }).refine(goal => goal.start <= goal.end && goal.target > goal.baseline, "Set a valid date range and a target above baseline.")
   .refine(goal => !["load", "e1rm"].includes(goal.metric) || !!goal.exerciseId, "Select an exercise for a strength goal.");
 export const planningSchema = z.object({
+  documents: z.array(z.object({
+    id, date: planningDate, title: z.string().trim().min(1).max(80),
+    objective: z.string().trim().max(1000), warmup: z.string().trim().max(2000),
+    cooldown: z.string().trim().max(2000), notes: z.string().trim().max(3000),
+    rows: z.array(z.object({
+      id, name: z.string().trim().min(1).max(80),
+      sets: z.number().int().min(1).max(100), reps: z.string().trim().min(1).max(80),
+      load: z.string().trim().max(80), rest: z.string().trim().max(80),
+      instructions: z.string().trim().max(500),
+    })).min(1).max(100),
+  })).max(500).default([]),
   plans: z.array(planSchema).max(500),
   blocks: z.array(z.object({ id, name: z.string().trim().min(1).max(80), start: planningDate, weeks: z.number().int().min(1).max(52), rule: ruleSchema })).max(50),
   goals: z.array(goalSchema).max(100),
 }).superRefine((planning, ctx) => {
-  for (const [key, items] of [["plans", planning.plans], ["blocks", planning.blocks], ["goals", planning.goals]] as const)
+  for (const [key, items] of [["plans", planning.plans], ["blocks", planning.blocks], ["goals", planning.goals], ["documents", planning.documents]] as const)
     if (new Set(items.map(item => item.id)).size !== items.length) ctx.addIssue({ code: "custom", path: [key], message: "Duplicate IDs." });
   for (const plan of planning.plans) if (plan.blockId && !planning.blocks.some(block => block.id === plan.blockId))
     ctx.addIssue({ code: "custom", path: ["plans"], message: "Unknown training block." });
 });
 export type Planning = z.infer<typeof planningSchema>;
+export type WorkoutDocument = Planning["documents"][number];
 export type PlannedWorkout = Planning["plans"][number];
 export type TrainingGoal = Planning["goals"][number];
-export const emptyPlanning: Planning = { plans: [], blocks: [], goals: [] };
+export const emptyPlanning: Planning = { plans: [], blocks: [], goals: [], documents: [] };
 export function shiftDate(date: string, days: number) {
   const value = new Date(date + "T12:00:00Z"); value.setUTCDate(value.getUTCDate() + days);
   return value.toISOString().slice(0, 10);
