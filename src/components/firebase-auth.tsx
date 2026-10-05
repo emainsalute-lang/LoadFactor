@@ -1,8 +1,7 @@
 "use client";
 
 import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, updateProfile, type User } from "firebase/auth";
-import Link from "next/link";
-import BrandMark from "@/components/brand-mark";
+import ProductIntroduction from "./product-introduction";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { firebaseAuth } from "@/lib/firebase/client";
@@ -104,24 +103,16 @@ export default function FirebaseLanding() {
   }
 
   if (user) return <main className="auth-loading" role="status">Opening your dashboard…</main>;
-  return <main className="landing-shell">
-    <header className="landing-header">
-      <Link href="/" className="landing-brand"><BrandMark/>loadfactor<span className="brand-period">.</span></Link>
-      <span className="landing-kicker">ATHLETIC PERFORMANCE</span>
-    </header>
-    <section className="landing-hero">
-      <div className="landing-copy">
-        <span className="eyebrow">TRAIN. MEASURE. EVOLVE.</span>
-        <h1>Put your work<br/>in <span>perspective.</span></h1>
-        <p>LoadFactor brings your training log, performance trends, strength progress, wellness, and coaching tools together in one workspace.</p>
-        <ul className="landing-features">
-          <li>Log strength, jumps, and sprints</li>
-          <li>Plan training and follow your progress</li>
-          <li>Work with coaches and manage your team</li>
-        </ul>
-      </div>
+  function openAccount(mode: "signin" | "register") {
+    setMode(mode); setError("");
+    window.requestAnimationFrame(() => {
+      document.getElementById("get-started")?.scrollIntoView({ block: "start", behavior: "smooth" });
+      document.querySelector<HTMLInputElement>('#get-started input[name="email"]')?.focus({ preventScroll: true });
+    });
+  }
+  return <ProductIntroduction onSignIn={() => openAccount("signin")} onCreateAccount={() => openAccount("register")}>
       <section className="panel auth-card" aria-labelledby="auth-heading">
-        <span className="eyebrow">YOUR TRAINING WORKSPACE</span>
+        <span className="eyebrow">Sign in</span>
         <h2 id="auth-heading">{mode === "signin" ? "Welcome back" : "Create your account"}</h2>
         <p>{mode === "signin" ? "Sign in to continue to LoadFactor." : "Get started with your LoadFactor account."}</p>
         <div className="auth-switch" role="group" aria-label="Account access">
@@ -142,7 +133,5 @@ export default function FirebaseLanding() {
         </form>
         <p className="auth-note">Secure sign-in powered by Firebase Authentication.</p>
       </section>
-    </section>
-    <footer className="landing-footer"><span>loadfactor.</span><span>Training data, made useful.</span></footer>
-  </main>;
+  </ProductIntroduction>;
 }

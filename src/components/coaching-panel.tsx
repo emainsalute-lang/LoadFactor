@@ -122,7 +122,7 @@ export default function CoachingPanel({ account, today, weightUnit, heightUnit, 
       setCreatedReport({ id: result.id, url: window.location.origin + "/reports/" + result.token, snapshot: result.snapshot }); return "Report created. Save its link now; the server keeps only a hash of the access token.";
     });
   }
-  return <section id="coaching" className="panel scroll-mt-6"><div className="section-title"><div><span className="eyebrow">COACHES, TEAMS AND SHARING</span><h2>{coach ? "Coach workspace" : "Coaching and progress reports"}</h2></div></div>
+  return <section id="coaching" className="panel scroll-mt-6"><div className="section-title"><div><span className="eyebrow">Coaching</span><h2>{coach ? "Coach workspace" : "Coaching and progress reports"}</h2></div></div>
     {!account ? <p>Create an athlete or coach account in Account & data to use connections, teams, feedback and shareable reports.</p> : <>
       <p className="account-description">{coach ? "Invite athletes to your teams. Each athlete chooses the data and actions they allow." : "Accept an invitation using the account email it was addressed to. Your connected coach can add you to their teams; choose each data and action permission below."}</p>
       <fieldset disabled={busy}>

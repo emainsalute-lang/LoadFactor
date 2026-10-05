@@ -163,7 +163,7 @@ export default function TrainingPlanner({ planning, onPlanning, sessions, today,
     setBusy(true); setError("");
     try { await onLink(session, planId); } catch (e) { setError(e instanceof Error ? e.message : "Could not link the workout."); } finally { setBusy(false); }
   }
-  return <section id="planning" className="panel scroll-mt-6"><div className="section-title"><div><span className="eyebrow">PLAN YOUR TRAINING</span><h2>Schedule and goals</h2></div></div>
+  return <section id="planning" className="panel scroll-mt-6"><div className="section-title"><div><span className="eyebrow">Planning</span><h2>Schedule and goals</h2></div></div>
     {error && <p className="error-message" role="alert">{error}</p>}{notice && <p className="success-message" role="status">{notice}</p>}
     <div className="phase-controls"><button type="button" className="secondary-button" onClick={exportCalendar}>Export scheduled training (.ics)</button><label className="field-label">Reminder time<input type="time" value={reminderTime} onChange={event => updateReminderTime(event.target.value)}/></label><button type="button" className="secondary-button" onClick={() => { if (remindersEnabled) { try { localStorage.removeItem(`loadfactor-reminders:${accountId ?? "guest"}`); setRemindersEnabled(false); } catch { setError("Reminder preference could not be removed."); } } else void enableReminders(); }}>{remindersEnabled ? "Disable reminders" : "Enable browser reminders"}</button></div>
     <p className="account-description">Calendar exports include scheduled workouts. Browser reminders require notification permission and LoadFactor to remain open.</p>

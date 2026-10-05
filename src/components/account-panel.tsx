@@ -41,7 +41,7 @@ export default function AccountPanel({ account }: { account: AccountUser | null 
     setMessage(imported + " sessions imported. Previously imported sessions were skipped."); window.dispatchEvent(new Event("loadfactor-sync"));
   }
   return <section id="account" className="panel account-panel">
-    <div className="section-title"><div><span className="eyebrow">YOUR ACCOUNT</span><h2>{account ? "Account & data" : "Save your progress across devices"}</h2></div>{account && <button disabled={busy} className="secondary-button" onClick={() => void action(async () => { await api("/api/auth/logout", "POST"); window.location.reload(); })}>Sign out</button>}</div>
+    <div className="section-title"><div><span className="eyebrow">Account</span><h2>{account ? "Account & data" : "Save your progress across devices"}</h2></div>{account && <button disabled={busy} className="secondary-button" onClick={() => void action(async () => { await api("/api/auth/logout", "POST"); window.location.reload(); })}>Sign out</button>}</div>
     {!account ? <>
       <p className="account-description">Create an account to save workouts on the server and access them from another device. Your browser demo remains available.</p>
       <div className="phase-controls" role="group" aria-label="Account access">{(["login", "register", "recover"] as const).map(value => <button type="button" disabled={busy} className="secondary-button" aria-pressed={mode === value} key={value} onClick={() => { setMode(value); setError(""); }}>{value === "login" ? "Sign in" : value === "register" ? "Create account" : "Recover password"}</button>)}</div>

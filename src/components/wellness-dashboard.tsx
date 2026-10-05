@@ -72,7 +72,7 @@ export default function WellnessDashboard({ checkIns, onCheckIns, sessions, toda
   const chart = points.map(p => ({ ...p, outcomeValue: outcome === "load" ? p.load : outcome === "volume" ? p.volumeKg === null ? null : weightFromKg(p.volumeKg, weightUnit) : outcome === "e1rm" ? p.estimateKg === null ? null : weightFromKg(p.estimateKg, weightUnit) : p.performance === null ? null : test?.kind === "sprint" ? p.performance : heightFromCm(p.performance, heightUnit) }));
   const reportName = reportMetric === "sleepHours" ? "Sleep duration (hours)" : ratings.find(r => r.key === reportMetric)!.label + " (1-5)";
   const weights = bodyweightHistory(checkIns, sessions).filter(p => p.date <= today).map(p => ({ ...p, value: weightFromKg(p.bodyweightKg, weightUnit) }));
-  return <section id="wellness" className="panel scroll-mt-6"><div className="section-title"><div><span className="eyebrow">DAILY WELLNESS</span><h2>Wellness and session load</h2></div></div>
+  return <section id="wellness" className="panel scroll-mt-6"><div className="section-title"><div><span className="eyebrow">Daily check-in</span><h2>Wellness and session load</h2></div></div>
     {error && <p className="error-message" role="alert">{error}</p>}{notice && <p className="success-message" role="status">{notice}</p>}
     <form onSubmit={e => void submit(e)}><fieldset disabled={busy || !ready}><div className="history-filters">
       <label className="field-label">Check-in date<input type="date" required max={today} value={form.date} onChange={e => chooseDate(e.target.value)}/></label>

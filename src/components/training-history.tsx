@@ -47,7 +47,7 @@ export default function TrainingHistory({ sessions, today, weightUnit, heightUni
   function toggleCompare(id: string) { setComparison(previous => { const current = previous.filter(value => sessions.some(s => s.id === value)); return current.includes(id) ? current.filter(v => v !== id) : current.length < 2 ? [...current, id] : current; }); }
   const format = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 1 });
   return <section id="history" className="panel history-panel scroll-mt-6">
-    <div className="section-title"><div><span className="eyebrow">THE TRAINING DIARY</span><h2>Training history</h2></div><button className="text-button" onClick={onExport}>Export data</button></div>
+    <div className="section-title"><div><span className="eyebrow">Past workouts</span><h2>Training history</h2></div><button className="text-button" onClick={onExport}>Export data</button></div>
     {deleted && <p className="success-message" role="status">Session deleted. <button className="text-button" onClick={onUndo}>Undo deletion</button></p>}
     <div className="history-filters">
       <label className="field-label">Search titles & notes<input type="search" value={filter.query} maxLength={200} placeholder="Find a session or note" onChange={e => patch({ query: e.target.value })}/></label>

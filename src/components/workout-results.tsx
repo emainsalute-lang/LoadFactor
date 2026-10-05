@@ -14,7 +14,7 @@ export default function WorkoutResults({ session, weightUnit, heightUnit }: { se
   const tests = performanceTests([session]);
   const load = sessionTrainingLoad(session);
   return <section className="workout-results" aria-labelledby="workout-results-heading">
-    <div className="results-heading"><span className="icon-box"><CheckCircle2 size={24}/></span><div><span className="eyebrow">YOUR WORKOUT RESULTS</span><h2 id="workout-results-heading">{session.title}</h2><p>{parseDate(session.date).toLocaleDateString("en-US", { dateStyle: "long" })} · Results from this workout</p></div></div>
+    <div className="results-heading"><span className="icon-box"><CheckCircle2 size={24}/></span><div><span className="eyebrow">Workout results</span><h2 id="workout-results-heading">{session.title}</h2><p>{parseDate(session.date).toLocaleDateString("en-US", { dateStyle: "long" })} · Results from this workout</p></div></div>
     <dl className="results-metrics">
       <div><dt>Exercises</dt><dd>{new Set(session.exercises.map(set => set.exerciseId)).size}</dd></div>
       <div><dt>Sets / attempts</dt><dd>{totals.sets}</dd></div>

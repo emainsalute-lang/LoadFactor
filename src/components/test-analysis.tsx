@@ -16,7 +16,7 @@ export default function TestAnalysis({ sessions, heightUnit }: { sessions: Worko
   const unit = test?.kind === "sprint" ? "s" : heightUnit;
   const display = (v: number | null) => v === null ? "-" : (test?.kind === "sprint" ? v : heightFromCm(v, heightUnit)).toFixed(test?.kind === "sprint" ? 3 : 1);
   const points = trials.map((t,i) => ({ attempt: i+1, value: test?.kind === "sprint" ? t.value : heightFromCm(t.value,heightUnit) }));
-  return <section id="tests" className="panel scroll-mt-6"><div className="section-title"><div><span className="eyebrow">JUMP AND SPRINT ANALYSIS</span><h2>Performance tests</h2></div></div>
+  return <section id="tests" className="panel scroll-mt-6"><div className="section-title"><div><span className="eyebrow">Jump and sprint</span><h2>Performance tests</h2></div></div>
     <p className="account-description">Results stay separate by exercise, jump category, takeoff, leg, sprint distance, and exact protocol notes. Each row is one measured trial; reps do not multiply attempts. Legacy tests use standing, both-leg jumps and 10 m for the named fly sprint. Unrecorded protocols cannot establish comparable conditions.</p>
     {!test ? <p>Log a jump or sprint to see test results.</p> : <>
       <label className="field-label">Test and protocol<select value={test.key} onChange={e => { setKey(e.target.value); setSessionId(""); }}>{tests.map(t => <option key={t.key} value={t.key}>{t.name} / {t.variant} / {t.protocol}</option>)}</select></label>

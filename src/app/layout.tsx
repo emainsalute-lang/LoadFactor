@@ -4,7 +4,7 @@ import PwaRegister from "@/components/pwa-register";
 import FirebaseAnalytics from "@/components/firebase-analytics";
 export const metadata: Metadata = {
   title: "LoadFactor — Athletic Performance",
-  description: "Log your training. Measure your progress. Build your next level.",
+  description: "Plan workouts, record sessions, and review your training results.",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/favicon.ico", apple: "/apple-touch-icon.png" },
   appleWebApp: { capable: true, title: "LoadFactor", statusBarStyle: "default" },
